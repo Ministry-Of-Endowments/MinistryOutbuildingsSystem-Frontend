@@ -19,7 +19,7 @@ export default function MosquesPage() {
   async function fetchMosques() {
     setLoading(true);
     try {
-      const url = '/Mosques/Mosques';
+      const url = '/Mosques';
       const res = await apiFetch(url);
       const data = await res.json();
       

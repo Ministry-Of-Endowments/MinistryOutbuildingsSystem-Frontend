@@ -155,7 +155,7 @@ export default function OutbuildingsPage() {
     setSearchKey('');
     setSelectedMosqueId(-1);
     try {
-      const mosqueRes = await apiFetch('/Mosques/Mosques');
+      const mosqueRes = await apiFetch('/Mosques');
       const mosqueData = await mosqueRes.json();
       
       if (mosqueData.status === 'success' && mosqueData.data) {
