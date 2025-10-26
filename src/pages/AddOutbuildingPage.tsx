@@ -1,5 +1,12 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
+
+type Mosque = {
+  id: number;
+  name: string;
+  directorate: string;
+  address: string;
+};
 
 export default function AddOutbuildingPage() {
   const [form, setForm] = useState({
@@ -11,8 +18,33 @@ export default function AddOutbuildingPage() {
     notes: "",
     mosqueId: "",
   });
+  const [mosques, setMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMosques, setLoadingMosques] = useState(true);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    fetchMosques();
+  }, []);
+
+  async function fetchMosques() {
+    setLoadingMosques(true);
+    try {
+      const res = await apiFetch('/Mosques');
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        setMosques(data.data || []);
+      } else {
+        setMosques([]);
+      }
+    } catch (err) {
+      console.error('Failed to fetch mosques:', err);
+      setMosques([]);
+    } finally {
+      setLoadingMosques(false);
+    }
+  }
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -75,15 +107,24 @@ export default function AddOutbuildingPage() {
           className="bg-white p-8 rounded shadow grid grid-cols-1 md:grid-cols-3 gap-6"
         >
         <div>
-          <label className="block mb-1 font-semibold">رقم المسجد</label>
-          <input
-            type="text"
+          <label className="block mb-1 font-semibold">المسجد</label>
+          <select
             name="mosqueId"
             value={form.mosqueId}
             onChange={handleChange}
             required
+            disabled={loadingMosques}
             className="w-full border rounded px-3 py-2"
-          />
+          >
+            <option value="">
+              {loadingMosques ? "جاري التحميل..." : "اختر المسجد"}
+            </option>
+            {mosques.map((mosque) => (
+              <option key={mosque.id} value={mosque.id}>
+                {mosque.name} - {mosque.directorate}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div>
@@ -150,12 +191,11 @@ export default function AddOutbuildingPage() {
         </div>
 
         <div className="col-span-full">
-          <label className="block mb-1 font-semibold">الملاحظات</label>
+          <label className="block mb-1 font-semibold">الملاحظات (اختياري)</label>
           <textarea
             name="notes"
             value={form.notes}
             onChange={handleChange}
-            required
             rows={4}
             className="w-full border rounded px-3 py-2"
           />

@@ -106,7 +106,6 @@ export default function AddMosquePage() {
             name="notes"
             value={form.notes}
             onChange={handleChange}
-            required
             rows={4}
             className="w-full border rounded px-3 py-2"
           />
