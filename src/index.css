@@ -1,0 +1,23 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #c7ad6b;
+  --font-family-sans: 'Cairo', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+}
+
+:root {
+  --primary: #c7ad6b;
+}
+
+body {
+  font-family: 'Cairo', system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+  background: #ffffff;
+}
+
+table {
+  border-collapse: collapse;
+}
