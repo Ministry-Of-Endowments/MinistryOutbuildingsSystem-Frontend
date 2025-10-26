@@ -35,6 +35,10 @@ export default function OutbuildingsPage() {
   });
   const [contractLoading, setContractLoading] = useState(false);
 
+  useEffect(() => {
+    fetchAllOutbuildings();
+  }, []);
+
   async function fetchOutbuildings(mosqueId: number) {
     setLoading(true);
     try {
