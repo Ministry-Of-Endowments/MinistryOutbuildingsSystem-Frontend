@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { apiFetch } from "../utils/api";
+import { DIRECTORATES } from "../utils/constants";
 
 export default function AddMosquePage() {
   const [form, setForm] = useState({
@@ -78,14 +79,20 @@ export default function AddMosquePage() {
 
         <div>
           <label className="block mb-1 font-semibold">المديرية</label>
-          <input
-            type="text"
+          <select
             name="directorate"
             value={form.directorate}
             onChange={handleChange}
             required
             className="w-full border rounded px-3 py-2"
-          />
+          >
+            <option value="">اختر المديرية</option>
+            {DIRECTORATES.map((dir) => (
+              <option key={dir} value={dir}>
+                {dir}
+              </option>
+            ))}
+          </select>
         </div>
 
         <div className="col-span-full">
