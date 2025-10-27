@@ -1,6 +1,13 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
-import { DIRECTORATES } from '../utils/constants';
+import MosquesTable from '../components/MosquesTable';
+import MosqueDetailsModal from '../components/MosqueDetailsModal';
+import MosqueEditModal from '../components/MosqueEditModal';
+import AddOutbuildingModal from '../components/AddOutbuildingModal';
+import OutbuildingsListModal from '../components/OutbuildingsListModal';
+import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
+import OutbuildingEditModal from '../components/OutbuildingEditModal';
+import ContractModal from '../components/ContractModal';
 
 type Mosque = {
   id: number;
@@ -8,6 +15,23 @@ type Mosque = {
   directorate: string;
   address: string;
   notes: string;
+};
+
+type Outbuilding = {
+  id: number;
+  name: string;
+  address: string;
+  type: number;
+  status: boolean;
+  startDate: string;
+  endDate: string;
+  acceptanceDate: string;
+  price: number;
+  space: number;
+  notes: string;
+  tenantName?: string;
+  tenantNationalId?: string;
+  contractUrl?: string;
 };
 
 export default function MosquesPage() {
@@ -24,6 +48,45 @@ export default function MosquesPage() {
     notes: '',
   });
   const [editLoading, setEditLoading] = useState(false);
+
+  const [showOutbuildingsModal, setShowOutbuildingsModal] = useState(false);
+  const [outbuildings, setOutbuildings] = useState<Outbuilding[]>([]);
+  const [outbuildingsLoading, setOutbuildingsLoading] = useState(false);
+  const [selectedOutbuilding, setSelectedOutbuilding] = useState<Outbuilding | null>(null);
+  const [showOutbuildingDetailsModal, setShowOutbuildingDetailsModal] = useState(false);
+  const [showOutbuildingEditModal, setShowOutbuildingEditModal] = useState(false);
+  const [showContractModal, setShowContractModal] = useState(false);
+  const [contractForm, setContractForm] = useState({
+    startDate: '',
+    endDate: '',
+    tenantName: '',
+    tenantNationalId: '',
+    contract: null as File | null,
+  });
+  const [outbuildingEditForm, setOutbuildingEditForm] = useState({
+    name: '',
+    address: '',
+    type: 0,
+    price: '',
+    space: '',
+    notes: '',
+    status: false,
+    startDate: '',
+    endDate: '',
+    acceptanceDate: '',
+  });
+  const [contractLoading, setContractLoading] = useState(false);
+  const [outbuildingEditLoading, setOutbuildingEditLoading] = useState(false);
+  const [showAddOutbuildingModal, setShowAddOutbuildingModal] = useState(false);
+  const [addOutbuildingForm, setAddOutbuildingForm] = useState({
+    name: '',
+    address: '',
+    type: '',
+    price: '',
+    space: '',
+    notes: '',
+  });
+  const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
 
   async function fetchMosques() {
     setLoading(true);
@@ -148,16 +211,217 @@ export default function MosquesPage() {
 
   useEffect(() => { fetchMosques(); }, []);
 
+  async function fetchOutbuildings(mosqueId: number) {
+    setOutbuildingsLoading(true);
+    try {
+      const url = `/Outbuildings/${mosqueId}`;
+      const res = await apiFetch(url);
+      const data = await res.json();
+      
+      if (data.status === 'success' && data.data) {
+        const outbuildingData = data.data;
+        const apiOutbuildings = Array.isArray(outbuildingData) ? outbuildingData : [outbuildingData];
+        setOutbuildings(apiOutbuildings.filter(item => item != null));
+      } else {
+        setOutbuildings([]);
+      }
+    } catch (e) {
+      console.error('Fetch error:', e);
+      setOutbuildings([]);
+    } finally {
+      setOutbuildingsLoading(false);
+    }
+  }
+
+  function showOutbuildingsForMosque(mosque: Mosque) {
+    setSelected(mosque);
+    setShowModal(false);
+    setShowOutbuildingsModal(true);
+    fetchOutbuildings(mosque.id);
+  }
+
+  function showOutbuildingDetails(outbuilding: Outbuilding) {
+    setSelectedOutbuilding(outbuilding);
+    setShowOutbuildingDetailsModal(true);
+  }
+
+  function openContractModal(item: Outbuilding) {
+    setSelectedOutbuilding(item);
+    setShowContractModal(true);
+  }
+
+  function openOutbuildingEditModal(item: Outbuilding) {
+    setSelectedOutbuilding(item);
+    setOutbuildingEditForm({
+      name: item.name,
+      address: item.address,
+      type: item.type,
+      price: item.price.toString(),
+      space: item.space.toString(),
+      notes: item.notes || '',
+      status: item.status,
+      startDate: item.startDate || '',
+      endDate: item.endDate || '',
+      acceptanceDate: item.acceptanceDate || '',
+    });
+    setShowOutbuildingEditModal(true);
+  }
+
+  async function handleOutbuildingEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedOutbuilding) return;
+    setOutbuildingEditLoading(true);
+
+    try {
+      const payload = {
+        name: outbuildingEditForm.name,
+        address: outbuildingEditForm.address,
+        type: outbuildingEditForm.type,
+        notes: outbuildingEditForm.notes || null,
+        price: parseFloat(outbuildingEditForm.price),
+        space: parseFloat(outbuildingEditForm.space),
+        status: outbuildingEditForm.status,
+        startDate: outbuildingEditForm.startDate || null,
+        endDate: outbuildingEditForm.endDate || null,
+        acceptanceDate: outbuildingEditForm.acceptanceDate || null,
+      };
+
+      const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        alert('تم تحديث الملحق بنجاح');
+        setShowOutbuildingEditModal(false);
+        if (selected) {
+          await fetchOutbuildings(selected.id);
+        }
+      } else {
+        alert(data.message || 'حدث خطأ أثناء التحديث');
+      }
+    } catch (err) {
+      console.error('Update error:', err);
+      alert('فشل الاتصال بالسيرفر');
+    } finally {
+      setOutbuildingEditLoading(false);
+    }
+  }
+
+  async function handleOutbuildingDelete() {
+    if (!selectedOutbuilding || !selected) return;
+    if (!confirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.name}"؟`)) return;
+
+    const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
+    if (res.ok) {
+      alert('تم حذف الملحق بنجاح');
+      setShowOutbuildingDetailsModal(false);
+      await fetchOutbuildings(selected.id);
+    } else {
+      const err = await res.json();
+      alert(err.message || 'حدث خطأ');
+    }
+  }
+
+  async function handleContract(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedOutbuilding || !selected) return;
+
+    setContractLoading(true);
+    try {
+      const formData = new FormData();
+      if (contractForm.startDate) formData.append('startDate', contractForm.startDate);
+      if (contractForm.endDate) formData.append('endDate', contractForm.endDate);
+      if (contractForm.tenantName) formData.append('tenantName', contractForm.tenantName);
+      if (contractForm.tenantNationalId) formData.append('tenantNationalId', contractForm.tenantNationalId);
+      if (contractForm.contract) formData.append('contract', contractForm.contract);
+
+      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?startDate=${contractForm.startDate}&endDate=${contractForm.endDate}&tenantName=${encodeURIComponent(contractForm.tenantName)}&tenantNationalId=${encodeURIComponent(contractForm.tenantNationalId)}`, {
+        method: 'PUT',
+        body: contractForm.contract ? formData : undefined,
+      });
+
+      const data = await res.json();
+      if (data.status === 'success') {
+        alert('تم إضافة العقد بنجاح');
+        setShowContractModal(false);
+        await fetchOutbuildings(selected.id);
+      } else {
+        alert(data.message || 'حدث خطأ أثناء إضافة العقد');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('فشل الاتصال بالسيرفر');
+    } finally {
+      setContractLoading(false);
+    }
+  }
+
+  function openAddOutbuildingModal(mosque: Mosque) {
+    setSelected(mosque);
+    setAddOutbuildingForm({
+      name: '',
+      address: '',
+      type: '',
+      price: '',
+      space: '',
+      notes: '',
+    });
+    setShowModal(false);
+    setShowAddOutbuildingModal(true);
+  }
+
+  async function handleAddOutbuilding(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selected) return;
+
+    setAddOutbuildingLoading(true);
+    try {
+      const basicPayload = {
+        name: addOutbuildingForm.name,
+        address: addOutbuildingForm.address,
+        type: parseInt(addOutbuildingForm.type),
+        price: parseFloat(addOutbuildingForm.price),
+        space: parseFloat(addOutbuildingForm.space),
+        notes: addOutbuildingForm.notes,
+      };
+      
+      const res = await apiFetch(`/Outbuildings/${selected.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(basicPayload),
+      });
+      const data = await res.json();
+      
+      if (data.status === 'success') {
+        alert('تم إضافة الملحق بنجاح');
+        setShowAddOutbuildingModal(false);
+        await fetchOutbuildings(selected.id);
+      } else {
+        alert(data.message || 'حدث خطأ أثناء الإضافة');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('فشل الاتصال بالسيرفر');
+    } finally {
+      setAddOutbuildingLoading(false);
+    }
+  }
+
+
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4 flex-shrink-0">
+      <div className="flex items-center gap-2 mb-4 shrink-0">
         <input
           type="text"
           placeholder="ابحث عن مسجد..."
           value={searchKey}
           onChange={(e) => setSearchKey(e.target.value)}
           onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
-          className="flex-1 border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-[var(--primary)]"
+          className="flex-1 border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
         />
         <button
           onClick={handleSearch}
@@ -174,160 +438,84 @@ export default function MosquesPage() {
         </button>
       </div>
 
-      <div className="flex-1 overflow-auto bg-white border rounded min-h-0">
-        <table className="w-full text-right">
-          <thead>
-            <tr className="bg-gray-50">
-              <th className="p-3 border">#</th>
-              <th className="p-3 border">الاسم</th>
-              <th className="p-3 border">المديرية</th>
-              <th className="p-3 border">العنوان</th>
-              <th className="p-3 border">ملاحظات</th>
-              <th className="p-3 border">الإجراءات</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={6} className="p-6 text-center">جارٍ التحميل...</td></tr>
-            ) : mosques.length === 0 ? (
-              <tr><td colSpan={6} className="p-6 text-center">لا توجد بيانات لعرضها</td></tr>
-            ) : mosques.map((mosque, idx) => (
-              <tr key={mosque.id} className="hover:bg-gray-50">
-                <td className="p-3 border">{idx + 1}</td>
-                <td className="p-3 border">{mosque.name || '-'}</td>
-                <td className="p-3 border">{mosque.directorate || '-'}</td>
-                <td className="p-3 border">{mosque.address || '-'}</td>
-                <td className="p-3 border">{mosque.notes || '-'}</td>
-                <td className="p-3 border">
-                  <button
-                    className="px-3 py-1 rounded"
-                    style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
-                    onClick={() => showDetails(mosque)}
-                  >
-                    عرض
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <MosquesTable 
+        mosques={mosques} 
+        loading={loading} 
+        onShowDetails={showDetails}
+        onViewOutbuildings={showOutbuildingsForMosque}
+      />
 
       {showModal && selected && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded shadow max-w-2xl w-full p-6 max-h-[90vh] overflow-auto">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">تفاصيل المسجد</h3>
-              <button className="text-gray-600" onClick={() => setShowModal(false)}>✖</button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm mb-6">
-              <div><b>الاسم:</b> {selected.name || '-'}</div>
-              <div><b>المديرية:</b> {selected.directorate || '-'}</div>
-              <div><b>العنوان:</b> {selected.address || '-'}</div>
-              {selected.notes && (
-                <div className="col-span-2"><b>ملاحظات:</b> {selected.notes}</div>
-              )}
-            </div>
-
-            <div className="mt-6 flex justify-end gap-2">
-              <button
-                className="px-4 py-2 rounded text-white bg-red-600 hover:bg-red-700"
-                onClick={handleDelete}
-              >
-                حذف
-              </button>
-              <button
-                className="px-4 py-2 rounded text-white"
-                style={{ backgroundColor: 'var(--primary)' }}
-                onClick={() => openEditModal(selected)}
-              >
-                تعديل
-              </button>
-              <button className="px-4 py-2 rounded border" onClick={() => setShowModal(false)}>إغلاق</button>
-            </div>
-          </div>
-        </div>
+        <MosqueDetailsModal
+          mosque={selected}
+          onClose={() => setShowModal(false)}
+          onEdit={() => openEditModal(selected)}
+          onDelete={handleDelete}
+        />
       )}
 
       {showEditModal && selected && (
-        <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded shadow max-w-2xl w-full p-6">
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">تعديل المسجد</h3>
-              <button className="text-gray-600" onClick={() => setShowEditModal(false)}>✖</button>
-            </div>
+        <MosqueEditModal
+          form={editForm}
+          loading={editLoading}
+          onClose={() => setShowEditModal(false)}
+          onSubmit={handleEdit}
+          onChange={setEditForm}
+        />
+      )}
 
-            <form onSubmit={handleEdit} className="space-y-4">
-              <div>
-                <label className="block mb-1 font-semibold">اسم المسجد</label>
-                <input
-                  type="text"
-                  value={editForm.name}
-                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  required
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
+      {showAddOutbuildingModal && selected && (
+        <AddOutbuildingModal
+          mosqueName={selected.name}
+          form={addOutbuildingForm}
+          loading={addOutbuildingLoading}
+          onClose={() => setShowAddOutbuildingModal(false)}
+          onSubmit={handleAddOutbuilding}
+          onChange={setAddOutbuildingForm}
+        />
+      )}
 
-              <div>
-                <label className="block mb-1 font-semibold">المديرية</label>
-                <select
-                  value={editForm.directorate}
-                  onChange={(e) => setEditForm({ ...editForm, directorate: e.target.value })}
-                  required
-                  className="w-full border rounded px-3 py-2"
-                >
-                  <option value="">اختر المديرية</option>
-                  {DIRECTORATES.map((dir) => (
-                    <option key={dir} value={dir}>
-                      {dir}
-                    </option>
-                  ))}
-                </select>
-              </div>
+      {showOutbuildingsModal && selected && (
+        <OutbuildingsListModal
+          mosqueName={selected.name}
+          outbuildings={outbuildings}
+          loading={outbuildingsLoading}
+          onClose={() => setShowOutbuildingsModal(false)}
+          onShowDetails={showOutbuildingDetails}
+          onAddOutbuilding={() => openAddOutbuildingModal(selected)}
+        />
+      )}
 
-              <div>
-                <label className="block mb-1 font-semibold">العنوان</label>
-                <input
-                  type="text"
-                  value={editForm.address}
-                  onChange={(e) => setEditForm({ ...editForm, address: e.target.value })}
-                  required
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
+      {showOutbuildingDetailsModal && selectedOutbuilding && (
+        <OutbuildingDetailsModal
+          outbuilding={selectedOutbuilding}
+          onClose={() => setShowOutbuildingDetailsModal(false)}
+          onEdit={() => openOutbuildingEditModal(selectedOutbuilding)}
+          onDelete={handleOutbuildingDelete}
+          onAddContract={() => openContractModal(selectedOutbuilding)}
+        />
+      )}
 
-              <div>
-                <label className="block mb-1 font-semibold">الملاحظات (اختياري)</label>
-                <textarea
-                  value={editForm.notes}
-                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
-                  rows={3}
-                  className="w-full border rounded px-3 py-2"
-                />
-              </div>
+      {showOutbuildingEditModal && selectedOutbuilding && (
+        <OutbuildingEditModal
+          outbuildingName={selectedOutbuilding.name}
+          form={outbuildingEditForm}
+          loading={outbuildingEditLoading}
+          onClose={() => setShowOutbuildingEditModal(false)}
+          onSubmit={handleOutbuildingEdit}
+          onChange={setOutbuildingEditForm}
+        />
+      )}
 
-              <div className="flex justify-end gap-2 mt-6">
-                <button
-                  type="button"
-                  className="px-4 py-2 rounded border"
-                  onClick={() => setShowEditModal(false)}
-                >
-                  إلغاء
-                </button>
-                <button
-                  type="submit"
-                  disabled={editLoading}
-                  className="px-4 py-2 rounded text-white"
-                  style={{ backgroundColor: 'var(--primary)' }}
-                >
-                  {editLoading ? 'جارٍ الحفظ...' : 'حفظ التعديلات'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+      {showContractModal && selectedOutbuilding && (
+        <ContractModal
+          outbuildingName={selectedOutbuilding.name}
+          form={contractForm}
+          loading={contractLoading}
+          onClose={() => setShowContractModal(false)}
+          onSubmit={handleContract}
+          onChange={setContractForm}
+        />
       )}
     </div>
   );
