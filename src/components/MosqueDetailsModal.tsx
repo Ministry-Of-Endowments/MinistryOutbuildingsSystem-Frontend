@@ -1,5 +1,3 @@
-import React from 'react';
-
 type Mosque = {
   id: number;
   name: string;
