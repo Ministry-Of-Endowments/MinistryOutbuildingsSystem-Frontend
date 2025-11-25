@@ -26,7 +26,7 @@ export default function MainLayout() {
       <div className="w-full px-4 py-6 grid grid-cols-1 md:grid-cols-[200px_1fr] gap-4 h-[calc(100vh-100px)] overflow-hidden" dir="rtl">
         <aside className="bg-white border rounded p-2 flex-shrink-0">
           <nav className="flex md:flex-col gap-2">
-            <Link to="/mosques" className={`px-3 py-2 rounded text-sm ${isActive('/mosques') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>المساجد</Link>
+            <Link to="/mosques" className={`px-3 py-2 rounded text-sm ${isActive('/mosques') || isActive('/') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>المساجد</Link>
             <Link to="/add-mosque" className={`px-3 py-2 rounded text-sm ${isActive('/add-mosque') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>إضافة مسجد</Link>
           </nav>
         </aside>

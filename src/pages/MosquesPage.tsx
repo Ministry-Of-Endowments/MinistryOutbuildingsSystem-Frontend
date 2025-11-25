@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import type { Mosque, Outbuilding } from '../utils/types';
 import MosquesTable from '../components/MosquesTable';
 import MosqueDetailsModal from '../components/MosqueDetailsModal';
 import MosqueEditModal from '../components/MosqueEditModal';
@@ -9,38 +10,16 @@ import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
 import OutbuildingEditModal from '../components/OutbuildingEditModal';
 import ContractModal from '../components/ContractModal';
 
-type Mosque = {
-  id: number;
-  name: string;
-  directorate: string;
-  address: string;
-  notes: string;
-};
-
-type Outbuilding = {
-  id: number;
-  name: string;
-  address: string;
-  type: number;
-  status: boolean;
-  startDate: string;
-  endDate: string;
-  acceptanceDate: string;
-  price: number;
-  space: number;
-  notes: string;
-  tenantName?: string;
-  tenantNationalId?: string;
-  contractUrl?: string;
-};
-
 export default function MosquesPage() {
   const [mosques, setMosques] = useState<Mosque[]>([]);
+  const [allMosques, setAllMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(false);
   const [selected, setSelected] = useState<Mosque | null>(null);
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [searchKey, setSearchKey] = useState('');
+  const [selectedDirectorate, setSelectedDirectorate] = useState<string>('');
+  const [selectedAdministration, setSelectedAdministration] = useState<string>('');
   const [editForm, setEditForm] = useState({
     name: '',
     directorate: '',
@@ -64,7 +43,7 @@ export default function MosquesPage() {
     contract: null as File | null,
   });
   const [outbuildingEditForm, setOutbuildingEditForm] = useState({
-    name: '',
+    description: '',
     address: '',
     type: 0,
     price: '',
@@ -74,19 +53,28 @@ export default function MosquesPage() {
     startDate: '',
     endDate: '',
     acceptanceDate: '',
+    tenantName: '',
+    tenantNationalId: '',
+    purpose: 1,
+    customPurpose: '',
+    legalStatus: null as number | null,
   });
   const [contractLoading, setContractLoading] = useState(false);
   const [outbuildingEditLoading, setOutbuildingEditLoading] = useState(false);
   const [showAddOutbuildingModal, setShowAddOutbuildingModal] = useState(false);
   const [addOutbuildingForm, setAddOutbuildingForm] = useState({
-    name: '',
+    description: '',
     address: '',
     type: '',
     price: '',
     space: '',
     notes: '',
+    purpose: 1,
+    customPurpose: '',
+    legalStatus: null as number | null,
   });
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
+  const [currentFilter, setCurrentFilter] = useState<any>({});
 
   async function fetchMosques() {
     setLoading(true);
@@ -96,21 +84,69 @@ export default function MosquesPage() {
       const data = await res.json();
       
       if (data.status === 'success') {
-        setMosques(data.data || []);
+        const fetchedMosques = data.data || [];
+        setAllMosques(fetchedMosques);
+        applyFilters(fetchedMosques);
       } else {
+        setAllMosques([]);
         setMosques([]);
       }
     } catch (e) {
       console.error('Fetch error:', e);
+      setAllMosques([]);
       setMosques([]);
     } finally {
       setLoading(false);
     }
   }
 
+  function applyFilters(mosquesToFilter?: Mosque[]) {
+    const dataToFilter = mosquesToFilter || allMosques;
+    let filtered = [...dataToFilter];
+
+    if (selectedDirectorate) {
+      filtered = filtered.filter(m => m.directorateName === selectedDirectorate);
+    }
+
+    if (selectedAdministration) {
+      filtered = filtered.filter(m => m.administrationName === selectedAdministration);
+    }
+
+    setMosques(filtered);
+  }
+
+  function handleDirectorateChange(directorate: string) {
+    setSelectedDirectorate(directorate);
+    setSelectedAdministration('');
+  }
+
+  function handleAdministrationChange(administration: string) {
+    setSelectedAdministration(administration);
+  }
+
+  function handleResetFilters() {
+    setSelectedDirectorate('');
+    setSelectedAdministration('');
+    setSearchKey('');
+    fetchMosques();
+  }
+
+  useEffect(() => {
+    applyFilters();
+  }, [selectedDirectorate, selectedAdministration]);
+
+  const uniqueDirectorates = Array.from(new Set(allMosques.map(m => m.directorateName))).sort();
+  const uniqueAdministrations = Array.from(
+    new Set(
+      allMosques
+        .filter(m => !selectedDirectorate || m.directorateName === selectedDirectorate)
+        .map(m => m.administrationName)
+    )
+  ).sort();
+
   async function handleSearch() {
     if (!searchKey.trim()) {
-      fetchMosques();
+      applyFilters();
       return;
     }
 
@@ -121,12 +157,16 @@ export default function MosquesPage() {
       const data = await res.json();
       
       if (data.status === 'success') {
-        setMosques(data.data || []);
+        const searchResults = data.data || [];
+        setAllMosques(searchResults);
+        applyFilters(searchResults);
       } else {
+        setAllMosques([]);
         setMosques([]);
       }
     } catch (e) {
       console.error('Search error:', e);
+      setAllMosques([]);
       setMosques([]);
     } finally {
       setLoading(false);
@@ -142,7 +182,7 @@ export default function MosquesPage() {
     setSelected(mosque);
     setEditForm({
       name: mosque.name,
-      directorate: mosque.directorate,
+      directorate: mosque.directorateName,
       address: mosque.address,
       notes: mosque.notes || '',
     });
@@ -211,10 +251,27 @@ export default function MosquesPage() {
 
   useEffect(() => { fetchMosques(); }, []);
 
-  async function fetchOutbuildings(mosqueId: number) {
+  async function fetchOutbuildings(mosqueId: number, filter?: any) {
     setOutbuildingsLoading(true);
     try {
-      const url = `/Outbuildings/${mosqueId}`;
+      let url = `/Outbuildings/${mosqueId}`;
+      
+      // Add query parameters if filter is provided
+      if (filter && Object.keys(filter).length > 0) {
+        const params = new URLSearchParams();
+        if (filter.administrationName) params.append('administrationName', filter.administrationName);
+        if (filter.directorateName) params.append('directorateName', filter.directorateName);
+        if (filter.mosqueName) params.append('mosqueName', filter.mosqueName);
+        if (filter.status !== undefined && filter.status !== null) params.append('status', filter.status.toString());
+        if (filter.purpose !== undefined && filter.purpose !== null) params.append('purpose', filter.purpose.toString());
+        if (filter.legalStatus !== undefined && filter.legalStatus !== null) params.append('legalStatus', filter.legalStatus.toString());
+        if (filter.minSize !== undefined && filter.minSize !== null) params.append('minSpace', filter.minSize.toString());
+        if (filter.maxSize !== undefined && filter.maxSize !== null) params.append('maxSpace', filter.maxSize.toString());
+        
+        const queryString = params.toString();
+        if (queryString) url += `?${queryString}`;
+      }
+      
       const res = await apiFetch(url);
       const data = await res.json();
       
@@ -237,7 +294,14 @@ export default function MosquesPage() {
     setSelected(mosque);
     setShowModal(false);
     setShowOutbuildingsModal(true);
+    setCurrentFilter({});
     fetchOutbuildings(mosque.id);
+  }
+
+  function handleOutbuildingFilter(filter: any) {
+    if (!selected) return;
+    setCurrentFilter(filter);
+    fetchOutbuildings(selected.id, filter);
   }
 
   function showOutbuildingDetails(outbuilding: Outbuilding) {
@@ -253,16 +317,21 @@ export default function MosquesPage() {
   function openOutbuildingEditModal(item: Outbuilding) {
     setSelectedOutbuilding(item);
     setOutbuildingEditForm({
-      name: item.name,
+      description: item.description,
       address: item.address,
       type: item.type,
-      price: item.price.toString(),
-      space: item.space.toString(),
+      price: item.price?.toString() || '',
+      space: item.space?.toString() || '',
       notes: item.notes || '',
       status: item.status,
       startDate: item.startDate || '',
       endDate: item.endDate || '',
       acceptanceDate: item.acceptanceDate || '',
+      tenantName: item.tenantName || '',
+      tenantNationalId: item.tenantNationalId || '',
+      purpose: item.purpose,
+      customPurpose: item.customPurpose || '',
+      legalStatus: item.legalStatus ?? null,
     });
     setShowOutbuildingEditModal(true);
   }
@@ -274,7 +343,7 @@ export default function MosquesPage() {
 
     try {
       const payload = {
-        name: outbuildingEditForm.name,
+        description: outbuildingEditForm.description,
         address: outbuildingEditForm.address,
         type: outbuildingEditForm.type,
         notes: outbuildingEditForm.notes || null,
@@ -284,6 +353,11 @@ export default function MosquesPage() {
         startDate: outbuildingEditForm.startDate || null,
         endDate: outbuildingEditForm.endDate || null,
         acceptanceDate: outbuildingEditForm.acceptanceDate || null,
+        tenantName: outbuildingEditForm.tenantName || null,
+        tenantNationalId: outbuildingEditForm.tenantNationalId || null,
+        purpose: outbuildingEditForm.purpose,
+        customPurpose: outbuildingEditForm.customPurpose || null,
+        legalStatus: outbuildingEditForm.legalStatus,
       };
 
       const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, {
@@ -298,7 +372,7 @@ export default function MosquesPage() {
         alert('تم تحديث الملحق بنجاح');
         setShowOutbuildingEditModal(false);
         if (selected) {
-          await fetchOutbuildings(selected.id);
+          await fetchOutbuildings(selected.id, currentFilter);
         }
       } else {
         alert(data.message || 'حدث خطأ أثناء التحديث');
@@ -313,13 +387,13 @@ export default function MosquesPage() {
 
   async function handleOutbuildingDelete() {
     if (!selectedOutbuilding || !selected) return;
-    if (!confirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.name}"؟`)) return;
+    if (!confirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.description}"؟`)) return;
 
     const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
     if (res.ok) {
       alert('تم حذف الملحق بنجاح');
       setShowOutbuildingDetailsModal(false);
-      await fetchOutbuildings(selected.id);
+      await fetchOutbuildings(selected.id, currentFilter);
     } else {
       const err = await res.json();
       alert(err.message || 'حدث خطأ');
@@ -333,22 +407,24 @@ export default function MosquesPage() {
     setContractLoading(true);
     try {
       const formData = new FormData();
-      if (contractForm.startDate) formData.append('startDate', contractForm.startDate);
-      if (contractForm.endDate) formData.append('endDate', contractForm.endDate);
-      if (contractForm.tenantName) formData.append('tenantName', contractForm.tenantName);
-      if (contractForm.tenantNationalId) formData.append('tenantNationalId', contractForm.tenantNationalId);
-      if (contractForm.contract) formData.append('contract', contractForm.contract);
+      formData.append('startDate', contractForm.startDate);
+      formData.append('endDate', contractForm.endDate);
+      formData.append('tenantName', contractForm.tenantName);
+      formData.append('tenantNationalId', contractForm.tenantNationalId);
+      if (contractForm.contract) {
+        formData.append('contract', contractForm.contract);
+      }
 
-      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?startDate=${contractForm.startDate}&endDate=${contractForm.endDate}&tenantName=${encodeURIComponent(contractForm.tenantName)}&tenantNationalId=${encodeURIComponent(contractForm.tenantNationalId)}`, {
+      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}`, {
         method: 'PUT',
-        body: contractForm.contract ? formData : undefined,
+        body: formData,
       });
 
       const data = await res.json();
       if (data.status === 'success') {
         alert('تم إضافة العقد بنجاح');
         setShowContractModal(false);
-        await fetchOutbuildings(selected.id);
+        await fetchOutbuildings(selected.id, currentFilter);
       } else {
         alert(data.message || 'حدث خطأ أثناء إضافة العقد');
       }
@@ -363,12 +439,15 @@ export default function MosquesPage() {
   function openAddOutbuildingModal(mosque: Mosque) {
     setSelected(mosque);
     setAddOutbuildingForm({
-      name: '',
+      description: '',
       address: '',
       type: '',
       price: '',
       space: '',
       notes: '',
+      purpose: 1,
+      customPurpose: '',
+      legalStatus: null,
     });
     setShowModal(false);
     setShowAddOutbuildingModal(true);
@@ -381,12 +460,15 @@ export default function MosquesPage() {
     setAddOutbuildingLoading(true);
     try {
       const basicPayload = {
-        name: addOutbuildingForm.name,
+        description: addOutbuildingForm.description,
         address: addOutbuildingForm.address,
         type: parseInt(addOutbuildingForm.type),
         price: parseFloat(addOutbuildingForm.price),
         space: parseFloat(addOutbuildingForm.space),
         notes: addOutbuildingForm.notes,
+        purpose: addOutbuildingForm.purpose,
+        customPurpose: addOutbuildingForm.customPurpose || null,
+        legalStatus: addOutbuildingForm.legalStatus,
       };
       
       const res = await apiFetch(`/Outbuildings/${selected.id}`, {
@@ -399,7 +481,7 @@ export default function MosquesPage() {
       if (data.status === 'success') {
         alert('تم إضافة الملحق بنجاح');
         setShowAddOutbuildingModal(false);
-        await fetchOutbuildings(selected.id);
+        await fetchOutbuildings(selected.id, currentFilter);
       } else {
         alert(data.message || 'حدث خطأ أثناء الإضافة');
       }
@@ -414,28 +496,68 @@ export default function MosquesPage() {
 
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
-      <div className="flex items-center gap-2 mb-4 shrink-0">
-        <input
-          type="text"
-          placeholder="ابحث عن مسجد..."
-          value={searchKey}
-          onChange={(e) => setSearchKey(e.target.value)}
-          onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
-          className="flex-1 border rounded px-4 py-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
-        />
-        <button
-          onClick={handleSearch}
-          className="px-4 py-2 rounded"
-          style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
-        >
-          بحث
-        </button>
-        <button
-          onClick={fetchMosques}
-          className="px-4 py-2 border rounded hover:bg-gray-50"
-        >
-          عرض الكل
-        </button>
+      {/* Filters Section */}
+      <div className="mb-4 p-4 bg-gray-50 border rounded shrink-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+          <div>
+            <label className="block mb-1 font-semibold text-sm">المديرية</label>
+            <select
+              value={selectedDirectorate}
+              onChange={(e) => handleDirectorateChange(e.target.value)}
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">جميع المديريات</option>
+              {uniqueDirectorates.map(dir => (
+                <option key={dir} value={dir}>{dir}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={`block mb-1 font-semibold text-sm ${!selectedDirectorate ? 'text-gray-400' : ''}`}>
+              الإدارة
+            </label>
+            <select
+              value={selectedAdministration}
+              onChange={(e) => handleAdministrationChange(e.target.value)}
+              className={`w-full border rounded px-3 py-2 ${!selectedDirectorate ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+              disabled={!selectedDirectorate}
+            >
+              <option value="">جميع الإدارات</option>
+              {uniqueAdministrations.map(admin => (
+                <option key={admin} value={admin}>{admin}</option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block mb-1 font-semibold text-sm">بحث بالاسم</label>
+            <input
+              type="text"
+              placeholder="ابحث عن مسجد..."
+              value={searchKey}
+              onChange={(e) => setSearchKey(e.target.value)}
+              onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
+              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+            />
+          </div>
+
+          <div className="flex items-end gap-2">
+            <button
+              onClick={handleSearch}
+              className="px-4 py-2 rounded text-white flex-1"
+              style={{ backgroundColor: 'var(--primary)' }}
+            >
+              بحث
+            </button>
+            <button
+              onClick={handleResetFilters}
+              className="px-4 py-2 border rounded hover:bg-gray-50"
+            >
+              إعادة تعيين
+            </button>
+          </div>
+        </div>
       </div>
 
       <MosquesTable 
@@ -483,6 +605,7 @@ export default function MosquesPage() {
           onClose={() => setShowOutbuildingsModal(false)}
           onShowDetails={showOutbuildingDetails}
           onAddOutbuilding={() => openAddOutbuildingModal(selected)}
+          onFilter={handleOutbuildingFilter}
         />
       )}
 
@@ -498,7 +621,7 @@ export default function MosquesPage() {
 
       {showOutbuildingEditModal && selectedOutbuilding && (
         <OutbuildingEditModal
-          outbuildingName={selectedOutbuilding.name}
+          outbuildingDescription={selectedOutbuilding.description}
           form={outbuildingEditForm}
           loading={outbuildingEditLoading}
           onClose={() => setShowOutbuildingEditModal(false)}
@@ -509,7 +632,7 @@ export default function MosquesPage() {
 
       {showContractModal && selectedOutbuilding && (
         <ContractModal
-          outbuildingName={selectedOutbuilding.name}
+          outbuildingName={selectedOutbuilding.description}
           form={contractForm}
           loading={contractLoading}
           onClose={() => setShowContractModal(false)}

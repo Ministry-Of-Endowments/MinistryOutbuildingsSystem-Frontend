@@ -1,10 +1,4 @@
-type Mosque = {
-  id: number;
-  name: string;
-  directorate: string;
-  address: string;
-  notes: string;
-};
+import type { Mosque } from '../utils/types';
 
 type MosqueDetailsModalProps = {
   mosque: Mosque;
@@ -27,24 +21,28 @@ export default function MosqueDetailsModal({
           <button className="text-gray-600" onClick={onClose}>✖</button>
         </div>
 
-        <table className="w-full text-right mb-6">
+        <table className="w-full text-right mb-6 border-collapse border border-gray-300">
           <tbody>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold w-1/3">الاسم</td>
-              <td className="p-3">{mosque.name || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الاسم</td>
+              <td className="p-3 border border-gray-300">{mosque.name || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">المديرية</td>
-              <td className="p-3">{mosque.directorate || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المديرية</td>
+              <td className="p-3 border border-gray-300">{mosque.directorateName || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">العنوان</td>
-              <td className="p-3">{mosque.address || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الإدارة</td>
+              <td className="p-3 border border-gray-300">{mosque.administrationName || '-'}</td>
+            </tr>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العنوان</td>
+              <td className="p-3 border border-gray-300">{mosque.address || '-'}</td>
             </tr>
             {mosque.notes && (
-              <tr className="border-b">
-                <td className="p-3 bg-gray-50 font-semibold">ملاحظات</td>
-                <td className="p-3">{mosque.notes}</td>
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">ملاحظات</td>
+                <td className="p-3 border border-gray-300">{mosque.notes}</td>
               </tr>
             )}
           </tbody>

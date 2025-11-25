@@ -1,19 +1,6 @@
-type Outbuilding = {
-  id: number;
-  name: string;
-  address: string;
-  type: number;
-  status: boolean;
-  startDate: string;
-  endDate: string;
-  acceptanceDate: string;
-  price: number;
-  space: number;
-  notes: string;
-  tenantName?: string;
-  tenantNationalId?: string;
-  contractUrl?: string;
-};
+import type { Outbuilding } from '../utils/types';
+import { getOutbuildingTypeLabel } from '../utils/types';
+import { getBackendUrl } from '../utils/api';
 
 type OutbuildingDetailsModalProps = {
   outbuilding: Outbuilding;
@@ -22,14 +9,6 @@ type OutbuildingDetailsModalProps = {
   onDelete: () => void;
   onAddContract: () => void;
 };
-
-function getOutbuildingTypeName(type: number): string {
-  switch (type) {
-    case 0: return 'محل';
-    case 1: return 'شقة';
-    default: return 'غير محدد';
-  }
-}
 
 export default function OutbuildingDetailsModal({
   outbuilding,
@@ -46,63 +25,71 @@ export default function OutbuildingDetailsModal({
           <button className="text-gray-600" onClick={onClose}>✖</button>
         </div>
 
-        <table className="w-full text-right mb-6">
+        <table className="w-full text-right mb-6 border-collapse border border-gray-300">
           <tbody>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold w-1/3">الاسم</td>
-              <td className="p-3">{outbuilding.name || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الوصف</td>
+              <td className="p-3 border border-gray-300">{outbuilding.description || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">العنوان</td>
-              <td className="p-3">{outbuilding.address || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العنوان</td>
+              <td className="p-3 border border-gray-300">{outbuilding.address || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">النوع</td>
-              <td className="p-3">{getOutbuildingTypeName(outbuilding.type)}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النوع</td>
+              <td className="p-3 border border-gray-300">{getOutbuildingTypeLabel(outbuilding.type)}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">الحالة</td>
-              <td className="p-3">{outbuilding.status ? 'نشط' : 'غير نشط'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الغرض</td>
+              <td className="p-3 border border-gray-300">{outbuilding.purposeText || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">اسم المستأجر</td>
-              <td className="p-3">{outbuilding.tenantName || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الحالة القانونية</td>
+              <td className="p-3 border border-gray-300">{outbuilding.legalStatusText || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">الرقم القومي</td>
-              <td className="p-3">{outbuilding.tenantNationalId || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الحالة</td>
+              <td className="p-3 border border-gray-300">{outbuilding.status ? 'مستغل' : 'غير مستغل'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">المساحة</td>
-              <td className="p-3">{outbuilding.space || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">اسم المستأجر</td>
+              <td className="p-3 border border-gray-300">{outbuilding.tenantName || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">السعر</td>
-              <td className="p-3">{outbuilding.price || '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الرقم القومي</td>
+              <td className="p-3 border border-gray-300">{outbuilding.tenantNationalId || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">تاريخ البدء</td>
-              <td className="p-3">{outbuilding.startDate ? new Date(outbuilding.startDate).toLocaleDateString('ar-EG') : '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المساحة</td>
+              <td className="p-3 border border-gray-300">{outbuilding.space || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">تاريخ الانتهاء</td>
-              <td className="p-3">{outbuilding.endDate ? new Date(outbuilding.endDate).toLocaleDateString('ar-EG') : '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">السعر</td>
+              <td className="p-3 border border-gray-300">{outbuilding.price || '-'}</td>
             </tr>
-            <tr className="border-b">
-              <td className="p-3 bg-gray-50 font-semibold">تاريخ القبول</td>
-              <td className="p-3">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ البدء</td>
+              <td className="p-3 border border-gray-300">{outbuilding.startDate ? new Date(outbuilding.startDate).toLocaleDateString('ar-EG') : '-'}</td>
+            </tr>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ الانتهاء</td>
+              <td className="p-3 border border-gray-300">{outbuilding.endDate ? new Date(outbuilding.endDate).toLocaleDateString('ar-EG') : '-'}</td>
+            </tr>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ القبول</td>
+              <td className="p-3 border border-gray-300">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
             </tr>
             {outbuilding.notes && (
-              <tr className="border-b">
-                <td className="p-3 bg-gray-50 font-semibold">ملاحظات</td>
-                <td className="p-3">{outbuilding.notes}</td>
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">ملاحظات</td>
+                <td className="p-3 border border-gray-300">{outbuilding.notes}</td>
               </tr>
             )}
             {outbuilding.contractUrl && (
-              <tr className="border-b">
-                <td className="p-3 bg-gray-50 font-semibold">العقد</td>
-                <td className="p-3">
-                  <a href={outbuilding.contractUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العقد</td>
+                <td className="p-3 border border-gray-300">
+                  <a href={getBackendUrl(outbuilding.contractUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
                     فتح العقد
                   </a>
                 </td>

@@ -1,16 +1,56 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
-import { DIRECTORATES } from "../utils/constants";
+
+type Administration = {
+  id: number;
+  name: string;
+};
+
+type Directorate = {
+  id: number;
+  name: string;
+  administrations: Administration[];
+};
 
 export default function AddMosquePage() {
   const [form, setForm] = useState({
     name: "",
-    directorate: "",
+    directorateName: "",
+    administrationId: "",
     address: "",
     notes: "",
   });
+  const [directorates, setDirectorates] = useState<Directorate[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+
+  useEffect(() => {
+    fetchDirectorates();
+  }, []);
+
+  async function fetchDirectorates() {
+    try {
+      const res = await apiFetch('/Outbuildings/Directorates/WithAdministrations');
+      const data = await res.json();
+      if (data.status === 'success') {
+        const sorted = (data.data || []).map((dir: Directorate) => ({
+          ...dir,
+          administrations: [...dir.administrations].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
+        })).sort((a: Directorate, b: Directorate) => a.name.localeCompare(b.name, 'ar'));
+        setDirectorates(sorted);
+      }
+    } catch (err) {
+      console.error('Failed to fetch directorates:', err);
+    }
+  }
+
+  const selectedDirectorate = directorates.find(d => d.name === form.directorateName);
+  const availableAdministrations = selectedDirectorate?.administrations || [];
+
+  function handleDirectorateChange(e: React.ChangeEvent<HTMLSelectElement>) {
+    const directorate = e.target.value;
+    setForm({ ...form, directorateName: directorate, administrationId: "" });
+  }
 
   function handleChange(
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
@@ -23,10 +63,18 @@ export default function AddMosquePage() {
     setLoading(true);
     setMessage(null);
     try {
+      const payload = {
+        name: form.name,
+        administrationId: parseInt(form.administrationId),
+        address: form.address,
+        notes: form.notes,
+        Directorate: form.directorateName,
+      };
+      
       const res = await apiFetch("/Mosques", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
       if (data.status === "success") {
@@ -80,16 +128,35 @@ export default function AddMosquePage() {
         <div>
           <label className="block mb-1 font-semibold">المديرية</label>
           <select
-            name="directorate"
-            value={form.directorate}
-            onChange={handleChange}
+            name="directorateName"
+            value={form.directorateName}
+            onChange={handleDirectorateChange}
             required
             className="w-full border rounded px-3 py-2"
           >
             <option value="">اختر المديرية</option>
-            {DIRECTORATES.map((dir) => (
-              <option key={dir} value={dir}>
-                {dir}
+            {directorates.map((dir) => (
+              <option key={dir.id} value={dir.name}>
+                {dir.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label className={`block mb-1 font-semibold ${!form.directorateName ? 'text-gray-400' : ''}`}>الإدارة</label>
+          <select
+            name="administrationId"
+            value={form.administrationId}
+            onChange={handleChange}
+            required
+            disabled={!form.directorateName}
+            className={`w-full border rounded px-3 py-2 ${!form.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+          >
+            <option value="">اختر الإدارة</option>
+            {availableAdministrations.map((admin) => (
+              <option key={admin.id} value={admin.id}>
+                {admin.name}
               </option>
             ))}
           </select>

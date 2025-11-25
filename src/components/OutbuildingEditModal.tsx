@@ -1,7 +1,11 @@
+import { useState, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
+import { OutbuildingPurpose, LegalStatus, getOutbuildingPurposeLabel, getLegalStatusLabel, type PurposeOption } from '../utils/types';
+
 type OutbuildingEditModalProps = {
-  outbuildingName: string;
+  outbuildingDescription: string;
   form: {
-    name: string;
+    description: string;
     address: string;
     type: number;
     price: string;
@@ -11,12 +15,17 @@ type OutbuildingEditModalProps = {
     startDate: string;
     endDate: string;
     acceptanceDate: string;
+    tenantName: string;
+    tenantNationalId: string;
+    purpose: number;
+    customPurpose: string;
+    legalStatus: number | null;
   };
   loading: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (form: {
-    name: string;
+    description: string;
     address: string;
     type: number;
     price: string;
@@ -26,32 +35,65 @@ type OutbuildingEditModalProps = {
     startDate: string;
     endDate: string;
     acceptanceDate: string;
+    tenantName: string;
+    tenantNationalId: string;
+    purpose: number;
+    customPurpose: string;
+    legalStatus: number | null;
   }) => void;
 };
 
 export default function OutbuildingEditModal({
-  outbuildingName,
+  outbuildingDescription,
   form,
   loading,
   onClose,
   onSubmit,
   onChange,
 }: OutbuildingEditModalProps) {
+  const [purposes, setPurposes] = useState<PurposeOption[]>([]);
+  
+  useEffect(() => {
+    // Fetch purposes from backend
+    async function fetchPurposes() {
+      try {
+        const res = await apiFetch('/Outbuildings/purposes');
+        const data = await res.json();
+        if (data.status === 'success') {
+          setPurposes(data.data || []);
+        }
+      } catch (e) {
+        console.error('Failed to fetch purposes:', e);
+        // Fallback to hardcoded values
+        setPurposes([
+          { value: OutbuildingPurpose.QuranOffices, label: getOutbuildingPurposeLabel(OutbuildingPurpose.QuranOffices) },
+          { value: OutbuildingPurpose.Nurseries, label: getOutbuildingPurposeLabel(OutbuildingPurpose.Nurseries) },
+          { value: OutbuildingPurpose.SewingWorkshops, label: getOutbuildingPurposeLabel(OutbuildingPurpose.SewingWorkshops) },
+          { value: OutbuildingPurpose.EducationalCenters, label: getOutbuildingPurposeLabel(OutbuildingPurpose.EducationalCenters) },
+          { value: OutbuildingPurpose.SpeechAndSkillsCenters, label: getOutbuildingPurposeLabel(OutbuildingPurpose.SpeechAndSkillsCenters) },
+          { value: OutbuildingPurpose.ClinicsAndMedicalCenters, label: getOutbuildingPurposeLabel(OutbuildingPurpose.ClinicsAndMedicalCenters) },
+          { value: OutbuildingPurpose.Other, label: getOutbuildingPurposeLabel(OutbuildingPurpose.Other) },
+        ]);
+      }
+    }
+    fetchPurposes();
+  }, []);
+
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-70">
       <div className="bg-white rounded shadow max-w-2xl w-full p-6 max-h-[90vh] overflow-auto">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">تعديل الملحق - {outbuildingName}</h3>
+          <h3 className="text-lg font-semibold">تعديل الملحق - {outbuildingDescription}</h3>
           <button className="text-gray-600" onClick={onClose}>✖</button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 font-semibold">الاسم</label>
+            <label className="block mb-1 font-semibold">الوصف</label>
             <input
               type="text"
-              value={form.name}
-              onChange={e => onChange({ ...form, name: e.target.value })}
+              value={form.description}
+              onChange={e => onChange({ ...form, description: e.target.value })}
               className="w-full border rounded px-3 py-2"
               required
             />
@@ -76,6 +118,46 @@ export default function OutbuildingEditModal({
             >
               <option value={0}>محل</option>
               <option value={1}>شقة</option>
+            </select>
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">الغرض من الملحق</label>
+            <select
+              value={form.purpose}
+              onChange={e => onChange({ ...form, purpose: parseInt(e.target.value) })}
+              required
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">اختر الغرض</option>
+              {purposes.map(p => (
+                <option key={p.value} value={p.value}>{p.label}</option>
+              ))}
+            </select>
+          </div>
+          {form.purpose === OutbuildingPurpose.Other && (
+            <div>
+              <label className="block mb-1 font-semibold">غرض آخر (يرجى التحديد)</label>
+              <input
+                type="text"
+                value={form.customPurpose}
+                onChange={e => onChange({ ...form, customPurpose: e.target.value })}
+                required
+                className="w-full border rounded px-3 py-2"
+                placeholder="اكتب الغرض المخصص..."
+              />
+            </div>
+          )}
+          <div>
+            <label className="block mb-1 font-semibold">الحالة القانونية</label>
+            <select
+              value={form.legalStatus ?? ''}
+              onChange={e => onChange({ ...form, legalStatus: e.target.value ? parseInt(e.target.value) : null })}
+              className="w-full border rounded px-3 py-2"
+            >
+              <option value="">اختر الحالة</option>
+              <option value={LegalStatus.Litigation}>{getLegalStatusLabel(LegalStatus.Litigation)}</option>
+              <option value={LegalStatus.Encroachment}>{getLegalStatusLabel(LegalStatus.Encroachment)}</option>
+              <option value={LegalStatus.Stable}>{getLegalStatusLabel(LegalStatus.Stable)}</option>
             </select>
           </div>
           <div>
@@ -107,8 +189,8 @@ export default function OutbuildingEditModal({
               onChange={e => onChange({ ...form, status: e.target.value === 'true' })}
               className="w-full border rounded px-3 py-2"
             >
-              <option value="false">غير مؤجر</option>
-              <option value="true">مؤجر</option>
+              <option value="false">غير مستغل</option>
+              <option value="true">مستغل</option>
             </select>
           </div>
           <div>
@@ -136,6 +218,26 @@ export default function OutbuildingEditModal({
               value={form.acceptanceDate}
               onChange={e => onChange({ ...form, acceptanceDate: e.target.value })}
               className="w-full border rounded px-3 py-2"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">اسم المستأجر</label>
+            <input
+              type="text"
+              value={form.tenantName}
+              onChange={e => onChange({ ...form, tenantName: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+              placeholder="اسم المستأجر (اختياري)"
+            />
+          </div>
+          <div>
+            <label className="block mb-1 font-semibold">الرقم القومي للمستأجر</label>
+            <input
+              type="text"
+              value={form.tenantNationalId}
+              onChange={e => onChange({ ...form, tenantNationalId: e.target.value })}
+              className="w-full border rounded px-3 py-2"
+              placeholder="الرقم القومي (اختياري)"
             />
           </div>
           <div>

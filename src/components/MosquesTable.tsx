@@ -1,10 +1,4 @@
-type Mosque = {
-  id: number;
-  name: string;
-  directorate: string;
-  address: string;
-  notes: string;
-};
+import type { Mosque } from '../utils/types';
 
 type MosquesTableProps = {
   mosques: Mosque[];
@@ -22,6 +16,7 @@ export default function MosquesTable({ mosques, loading, onShowDetails, onViewOu
             <th className="p-3 border">#</th>
             <th className="p-3 border">الاسم</th>
             <th className="p-3 border">المديرية</th>
+            <th className="p-3 border">الإدارة</th>
             <th className="p-3 border">العنوان</th>
             <th className="p-3 border">ملاحظات</th>
             <th className="p-3 border w-48">الإجراءات</th>
@@ -29,14 +24,15 @@ export default function MosquesTable({ mosques, loading, onShowDetails, onViewOu
         </thead>
         <tbody>
           {loading ? (
-            <tr><td colSpan={6} className="p-6 text-center">جارٍ التحميل...</td></tr>
+            <tr><td colSpan={7} className="p-6 text-center">جارٍ التحميل...</td></tr>
           ) : mosques.length === 0 ? (
-            <tr><td colSpan={6} className="p-6 text-center">لا توجد بيانات لعرضها</td></tr>
+            <tr><td colSpan={7} className="p-6 text-center">لا توجد بيانات لعرضها</td></tr>
           ) : mosques.map((mosque, idx) => (
             <tr key={mosque.id} className="hover:bg-gray-50">
               <td className="p-3 border">{idx + 1}</td>
               <td className="p-3 border">{mosque.name || '-'}</td>
-              <td className="p-3 border">{mosque.directorate || '-'}</td>
+              <td className="p-3 border">{mosque.directorateName || '-'}</td>
+              <td className="p-3 border">{mosque.administrationName || '-'}</td>
               <td className="p-3 border">{mosque.address || '-'}</td>
               <td className="p-3 border">{mosque.notes || '-'}</td>
               <td className="p-2 border w-64">
