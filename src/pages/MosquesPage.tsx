@@ -407,15 +407,18 @@ export default function MosquesPage() {
     setContractLoading(true);
     try {
       const formData = new FormData();
-      formData.append('startDate', contractForm.startDate);
-      formData.append('endDate', contractForm.endDate);
-      formData.append('tenantName', contractForm.tenantName);
-      formData.append('tenantNationalId', contractForm.tenantNationalId);
       if (contractForm.contract) {
         formData.append('contract', contractForm.contract);
       }
 
-      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}`, {
+      const queryParams = new URLSearchParams({
+        startDate: contractForm.startDate,
+        endDate: contractForm.endDate,
+        tenantName: contractForm.tenantName,
+        tenantNationalId: contractForm.tenantNationalId,
+      });
+
+      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?${queryParams}`, {
         method: 'PUT',
         body: formData,
       });
