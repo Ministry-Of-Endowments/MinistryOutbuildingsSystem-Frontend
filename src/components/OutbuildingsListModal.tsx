@@ -19,6 +19,8 @@ type OutbuildingsListModalProps = {
     status?: boolean | null;
     purpose?: number | null;
     legalStatus?: number | null;
+    hasElectricityMeter?: boolean | null;
+    hasWaterMeter?: boolean | null;
   }) => void;
 };
 
@@ -43,6 +45,8 @@ export default function OutbuildingsListModal({
     status: null as boolean | null,
     purpose: null as number | null,
     legalStatus: null as number | null,
+    hasElectricityMeter: null as boolean | null,
+    hasWaterMeter: null as boolean | null,
   });
 
   useEffect(() => {
@@ -93,6 +97,8 @@ export default function OutbuildingsListModal({
       status: filterForm.status,
       purpose: filterForm.purpose,
       legalStatus: filterForm.legalStatus,
+      hasElectricityMeter: filterForm.hasElectricityMeter,
+      hasWaterMeter: filterForm.hasWaterMeter,
     });
   };
 
@@ -106,6 +112,8 @@ export default function OutbuildingsListModal({
       status: null,
       purpose: null,
       legalStatus: null,
+      hasElectricityMeter: null,
+      hasWaterMeter: null,
     });
     onFilter({});
   };
@@ -124,7 +132,7 @@ export default function OutbuildingsListModal({
 
   return (
     <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded shadow w-[95vw] max-w-[1400px] h-[90vh] p-6 flex flex-col">
+      <div className="bg-white rounded shadow w-[98vw] max-w-[1800px] h-[90vh] p-6 flex flex-col">
         <div className="flex justify-between items-center mb-4 shrink-0">
           <h3 className="text-lg font-semibold">ملحقات مسجد: {mosqueName}</h3>
           <button className="text-gray-600" onClick={onClose}>✖</button>
@@ -189,7 +197,7 @@ export default function OutbuildingsListModal({
                 </div>
                 
                 <div>
-                  <label className="block mb-1 font-semibold text-sm">الغرض</label>
+                  <label className="block mb-1 font-semibold text-sm">النشاط</label>
                   <select
                     value={filterForm.purpose ?? ''}
                     onChange={e => setFilterForm({ ...filterForm, purpose: e.target.value ? parseInt(e.target.value) : null })}
@@ -241,6 +249,32 @@ export default function OutbuildingsListModal({
                     className="w-full border rounded px-3 py-2"
                   />
                 </div>
+
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">عداد كهرباء</label>
+                  <select
+                    value={filterForm.hasElectricityMeter === null ? '' : String(filterForm.hasElectricityMeter)}
+                    onChange={e => setFilterForm({ ...filterForm, hasElectricityMeter: e.target.value === '' ? null : e.target.value === 'true' })}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="">الكل</option>
+                    <option value="true">يوجد</option>
+                    <option value="false">لا يوجد</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block mb-1 font-semibold text-sm">عداد مياه</label>
+                  <select
+                    value={filterForm.hasWaterMeter === null ? '' : String(filterForm.hasWaterMeter)}
+                    onChange={e => setFilterForm({ ...filterForm, hasWaterMeter: e.target.value === '' ? null : e.target.value === 'true' })}
+                    className="w-full border rounded px-3 py-2"
+                  >
+                    <option value="">الكل</option>
+                    <option value="true">يوجد</option>
+                    <option value="false">لا يوجد</option>
+                  </select>
+                </div>
               </div>
               
               <div className="mt-3 flex gap-2">
@@ -263,52 +297,70 @@ export default function OutbuildingsListModal({
         </div>
 
         <div className="flex-1 overflow-auto bg-white border rounded min-h-0">
-          <table className="w-full text-right">
+          <table className="w-full text-right text-sm">
             <thead>
               <tr className="bg-gray-50">
-                <th className="p-3 border">#</th>
-                <th className="p-3 border">الوصف</th>
-                <th className="p-3 border">العنوان</th>
-                <th className="p-3 border">النوع</th>
-                <th className="p-3 border">الغرض</th>
-                <th className="p-3 border">الحالة القانونية</th>
-                <th className="p-3 border">الحالة</th>
-                <th className="p-3 border">اسم المستأجر</th>
-                <th className="p-3 border">الرقم القومي</th>
-                <th className="p-3 border">المساحة</th>
-                <th className="p-3 border">السعر</th>
-                <th className="p-3 border">تاريخ البدء</th>
-                <th className="p-3 border">تاريخ الانتهاء</th>
-                <th className="p-3 border">الإجراءات</th>
+                <th className="p-2 border whitespace-nowrap">#</th>
+                <th className="p-2 border whitespace-nowrap">الوصف</th>
+                <th className="p-2 border whitespace-nowrap">العنوان</th>
+                <th className="p-2 border whitespace-nowrap">النوع</th>
+                <th className="p-2 border whitespace-nowrap">النشاط</th>
+                <th className="p-2 border whitespace-nowrap">الحالة القانونية</th>
+                <th className="p-2 border whitespace-nowrap">الحالة</th>
+                <th className="p-2 border whitespace-nowrap">اسم المستأجر</th>
+                <th className="p-2 border whitespace-nowrap">الرقم القومي</th>
+                <th className="p-2 border whitespace-nowrap">المساحة</th>
+                <th className="p-2 border whitespace-nowrap">قيمة حق الانتفاع</th>
+                <th className="p-2 border whitespace-nowrap">عداد كهرباء</th>
+                <th className="p-2 border whitespace-nowrap">عداد مياه</th>
+                <th className="p-2 border whitespace-nowrap">تاريخ البدء</th>
+                <th className="p-2 border whitespace-nowrap">تاريخ الانتهاء</th>
+                <th className="p-2 border whitespace-nowrap">الإجراءات</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={14} className="p-6 text-center">جارٍ التحميل...</td></tr>
+                <tr><td colSpan={16} className="p-6 text-center">جارٍ التحميل...</td></tr>
               ) : outbuildings.length === 0 ? (
-                <tr><td colSpan={14} className="p-6 text-center text-gray-500">لا توجد ملحقات</td></tr>
-              ) : outbuildings.filter(item => item != null).map((item, idx) => (
-                <tr key={item.id} className="hover:bg-gray-50">
-                  <td className="p-3 border">{idx + 1}</td>
-                  <td className="p-3 border">{item.description || '-'}</td>
-                  <td className="p-3 border">{item.address || '-'}</td>
-                  <td className="p-3 border">{getOutbuildingTypeLabel(item.type)}</td>
-                  <td className="p-3 border">{item.purposeText || '-'}</td>
-                  <td className="p-3 border">{item.legalStatusText || '-'}</td>
-                  <td className="p-3 border">
+                <tr><td colSpan={16} className="p-6 text-center text-gray-500">لا توجد ملحقات</td></tr>
+              ) : outbuildings.filter(item => item != null).map((item, idx) => {
+                // Check if contract ends within 3 months
+                let rowColor = '';
+                if (item.endDate && item.status) {
+                  const endDate = new Date(item.endDate);
+                  const today = new Date();
+                  const threeMonthsFromNow = new Date();
+                  threeMonthsFromNow.setMonth(today.getMonth() + 3);
+                  
+                  if (endDate <= threeMonthsFromNow && endDate >= today) {
+                    rowColor = 'bg-red-100';
+                  }
+                }
+                
+                return (
+                <tr key={item.id} className={`hover:bg-gray-50 ${rowColor}`}>
+                  <td className="p-2 border whitespace-nowrap">{idx + 1}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.description || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.address || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{getOutbuildingTypeLabel(item.type)}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.purposeText || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.legalStatusText || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">
                     <span className={`px-2 py-1 rounded text-xs ${item.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                       {item.status ? 'مستغل' : 'غير مستغل'}
                     </span>
                   </td>
-                  <td className="p-3 border">{item.tenantName || '-'}</td>
-                  <td className="p-3 border">{item.tenantNationalId || '-'}</td>
-                  <td className="p-3 border">{item.space || '-'}</td>
-                  <td className="p-3 border">{item.price || '-'}</td>
-                  <td className="p-3 border">{item.startDate ? new Date(item.startDate).toLocaleDateString('ar-EG') : '-'}</td>
-                  <td className="p-3 border">{item.endDate ? new Date(item.endDate).toLocaleDateString('ar-EG') : '-'}</td>
-                  <td className="p-3 border">
+                  <td className="p-2 border whitespace-nowrap">{item.tenantName || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.tenantNationalId || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.space || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.price || '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.hasElectricityMeter ? 'نعم' : 'لا'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.hasWaterMeter ? 'نعم' : 'لا'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.startDate ? new Date(item.startDate).toLocaleDateString('ar-EG') : '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">{item.endDate ? new Date(item.endDate).toLocaleDateString('ar-EG') : '-'}</td>
+                  <td className="p-2 border whitespace-nowrap">
                     <button
-                      className="px-3 py-1 rounded"
+                      className="px-3 py-1 rounded text-xs"
                       style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
                       onClick={() => onShowDetails(item)}
                     >
@@ -316,7 +368,8 @@ export default function OutbuildingsListModal({
                     </button>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

@@ -20,6 +20,8 @@ export default function MosquesPage() {
   const [searchKey, setSearchKey] = useState('');
   const [selectedDirectorate, setSelectedDirectorate] = useState<string>('');
   const [selectedAdministration, setSelectedAdministration] = useState<string>('');
+  const [selectedDirectorateId, setSelectedDirectorateId] = useState<number | null>(null);
+  const [selectedAdministrationId, setSelectedAdministrationId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState({
     name: '',
     directorate: '',
@@ -40,6 +42,8 @@ export default function MosquesPage() {
     endDate: '',
     tenantName: '',
     tenantNationalId: '',
+    price: '',
+    committeeApprovalDate: '',
     contract: null as File | null,
   });
   const [outbuildingEditForm, setOutbuildingEditForm] = useState({
@@ -58,6 +62,8 @@ export default function MosquesPage() {
     purpose: 1,
     customPurpose: '',
     legalStatus: null as number | null,
+    hasElectricityMeter: false,
+    hasWaterMeter: false,
   });
   const [contractLoading, setContractLoading] = useState(false);
   const [outbuildingEditLoading, setOutbuildingEditLoading] = useState(false);
@@ -65,13 +71,13 @@ export default function MosquesPage() {
   const [addOutbuildingForm, setAddOutbuildingForm] = useState({
     description: '',
     address: '',
-    type: '',
-    price: '',
     space: '',
     notes: '',
     purpose: 1,
     customPurpose: '',
     legalStatus: null as number | null,
+    hasElectricityMeter: false,
+    hasWaterMeter: false,
   });
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<any>({});
@@ -118,15 +124,32 @@ export default function MosquesPage() {
   function handleDirectorateChange(directorate: string) {
     setSelectedDirectorate(directorate);
     setSelectedAdministration('');
+    setSelectedAdministrationId(null);
+    
+    if (directorate) {
+      const mosque = allMosques.find(m => m.directorateName === directorate);
+      setSelectedDirectorateId(mosque?.directorateId ?? null);
+    } else {
+      setSelectedDirectorateId(null);
+    }
   }
 
   function handleAdministrationChange(administration: string) {
     setSelectedAdministration(administration);
+    
+    if (administration) {
+      const mosque = allMosques.find(m => m.administrationName === administration);
+      setSelectedAdministrationId(mosque?.administrationId ?? null);
+    } else {
+      setSelectedAdministrationId(null);
+    }
   }
 
   function handleResetFilters() {
     setSelectedDirectorate('');
     setSelectedAdministration('');
+    setSelectedDirectorateId(null);
+    setSelectedAdministrationId(null);
     setSearchKey('');
     fetchMosques();
   }
@@ -267,6 +290,8 @@ export default function MosquesPage() {
         if (filter.legalStatus !== undefined && filter.legalStatus !== null) params.append('legalStatus', filter.legalStatus.toString());
         if (filter.minSize !== undefined && filter.minSize !== null) params.append('minSpace', filter.minSize.toString());
         if (filter.maxSize !== undefined && filter.maxSize !== null) params.append('maxSpace', filter.maxSize.toString());
+        if (filter.hasElectricityMeter !== undefined && filter.hasElectricityMeter !== null) params.append('hasElectricityMeter', filter.hasElectricityMeter.toString());
+        if (filter.hasWaterMeter !== undefined && filter.hasWaterMeter !== null) params.append('hasWaterMeter', filter.hasWaterMeter.toString());
         
         const queryString = params.toString();
         if (queryString) url += `?${queryString}`;
@@ -311,6 +336,15 @@ export default function MosquesPage() {
 
   function openContractModal(item: Outbuilding) {
     setSelectedOutbuilding(item);
+    setContractForm({
+      startDate: '',
+      endDate: '',
+      tenantName: '',
+      tenantNationalId: '',
+      price: '',
+      committeeApprovalDate: '',
+      contract: null,
+    });
     setShowContractModal(true);
   }
 
@@ -332,6 +366,8 @@ export default function MosquesPage() {
       purpose: item.purpose,
       customPurpose: item.customPurpose || '',
       legalStatus: item.legalStatus ?? null,
+      hasElectricityMeter: item.hasElectricityMeter ?? false,
+      hasWaterMeter: item.hasWaterMeter ?? false,
     });
     setShowOutbuildingEditModal(true);
   }
@@ -358,6 +394,8 @@ export default function MosquesPage() {
         purpose: outbuildingEditForm.purpose,
         customPurpose: outbuildingEditForm.customPurpose || null,
         legalStatus: outbuildingEditForm.legalStatus,
+        hasElectricityMeter: outbuildingEditForm.hasElectricityMeter,
+        hasWaterMeter: outbuildingEditForm.hasWaterMeter,
       };
 
       const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, {
@@ -400,6 +438,44 @@ export default function MosquesPage() {
     }
   }
 
+  async function handleExportExcel() {
+    try {
+      let url = '/Outbuildings/export-mosques-outbuildings';
+      const params = new URLSearchParams();
+      
+      if (selectedDirectorateId) {
+        params.append('directorateId', selectedDirectorateId.toString());
+      }
+      if (selectedAdministrationId) {
+        params.append('administrationId', selectedAdministrationId.toString());
+      }
+      
+      const queryString = params.toString();
+      if (queryString) {
+        url += `?${queryString}`;
+      }
+      
+      const res = await apiFetch(url);
+      
+      if (res.ok) {
+        const blob = await res.blob();
+        const blobUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = blobUrl;
+        a.download = `MosquesOutbuildings_${new Date().toISOString().split('T')[0]}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(blobUrl);
+        document.body.removeChild(a);
+      } else {
+        alert('فشل تصدير البيانات');
+      }
+    } catch (err) {
+      console.error(err);
+      alert('فشل تصدير البيانات');
+    }
+  }
+
   async function handleContract(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedOutbuilding || !selected) return;
@@ -416,7 +492,12 @@ export default function MosquesPage() {
         endDate: contractForm.endDate,
         tenantName: contractForm.tenantName,
         tenantNationalId: contractForm.tenantNationalId,
+        price: contractForm.price,
       });
+
+      if (contractForm.committeeApprovalDate) {
+        queryParams.append('committeeApprovalDate', contractForm.committeeApprovalDate);
+      }
 
       const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?${queryParams}`, {
         method: 'PUT',
@@ -444,13 +525,13 @@ export default function MosquesPage() {
     setAddOutbuildingForm({
       description: '',
       address: '',
-      type: '',
-      price: '',
       space: '',
       notes: '',
       purpose: 1,
       customPurpose: '',
       legalStatus: null,
+      hasElectricityMeter: false,
+      hasWaterMeter: false,
     });
     setShowModal(false);
     setShowAddOutbuildingModal(true);
@@ -465,13 +546,13 @@ export default function MosquesPage() {
       const basicPayload = {
         description: addOutbuildingForm.description,
         address: addOutbuildingForm.address,
-        type: parseInt(addOutbuildingForm.type),
-        price: parseFloat(addOutbuildingForm.price),
         space: parseFloat(addOutbuildingForm.space),
         notes: addOutbuildingForm.notes,
         purpose: addOutbuildingForm.purpose,
         customPurpose: addOutbuildingForm.customPurpose || null,
         legalStatus: addOutbuildingForm.legalStatus,
+        hasElectricityMeter: addOutbuildingForm.hasElectricityMeter,
+        hasWaterMeter: addOutbuildingForm.hasWaterMeter,
       };
       
       const res = await apiFetch(`/Outbuildings/${selected.id}`, {
@@ -558,6 +639,12 @@ export default function MosquesPage() {
               className="px-4 py-2 border rounded hover:bg-gray-50"
             >
               إعادة تعيين
+            </button>
+            <button
+              onClick={handleExportExcel}
+              className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700"
+            >
+              تصدير Excel
             </button>
           </div>
         </div>

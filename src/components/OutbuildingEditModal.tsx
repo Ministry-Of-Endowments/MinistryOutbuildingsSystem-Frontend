@@ -20,6 +20,8 @@ type OutbuildingEditModalProps = {
     purpose: number;
     customPurpose: string;
     legalStatus: number | null;
+    hasElectricityMeter: boolean;
+    hasWaterMeter: boolean;
   };
   loading: boolean;
   onClose: () => void;
@@ -40,6 +42,8 @@ type OutbuildingEditModalProps = {
     purpose: number;
     customPurpose: string;
     legalStatus: number | null;
+    hasElectricityMeter: boolean;
+    hasWaterMeter: boolean;
   }) => void;
 };
 
@@ -121,14 +125,14 @@ export default function OutbuildingEditModal({
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-semibold">الغرض من الملحق</label>
+            <label className="block mb-1 font-semibold">النشاط</label>
             <select
               value={form.purpose}
               onChange={e => onChange({ ...form, purpose: parseInt(e.target.value) })}
               required
               className="w-full border rounded px-3 py-2"
             >
-              <option value="">اختر الغرض</option>
+              <option value="">اختر النشاط</option>
               {purposes.map(p => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
@@ -136,14 +140,14 @@ export default function OutbuildingEditModal({
           </div>
           {form.purpose === OutbuildingPurpose.Other && (
             <div>
-              <label className="block mb-1 font-semibold">غرض آخر (يرجى التحديد)</label>
+              <label className="block mb-1 font-semibold">نشاط آخر (يرجى التحديد)</label>
               <input
                 type="text"
                 value={form.customPurpose}
                 onChange={e => onChange({ ...form, customPurpose: e.target.value })}
                 required
                 className="w-full border rounded px-3 py-2"
-                placeholder="اكتب الغرض المخصص..."
+                placeholder="اكتب النشاط المخصص..."
               />
             </div>
           )}
@@ -161,7 +165,7 @@ export default function OutbuildingEditModal({
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-semibold">السعر</label>
+            <label className="block mb-1 font-semibold">قيمة حق الانتفاع</label>
             <input
               type="number"
               step="0.01"
@@ -240,6 +244,31 @@ export default function OutbuildingEditModal({
               placeholder="الرقم القومي (اختياري)"
             />
           </div>
+          
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hasElectricityMeter}
+                onChange={e => onChange({ ...form, hasElectricityMeter: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold">يوجد عداد كهرباء</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hasWaterMeter}
+                onChange={e => onChange({ ...form, hasWaterMeter: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold">يوجد عداد مياه</span>
+            </label>
+          </div>
+
           <div>
             <label className="block mb-1 font-semibold">ملاحظات</label>
             <textarea

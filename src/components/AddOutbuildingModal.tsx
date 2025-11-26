@@ -7,13 +7,13 @@ type AddOutbuildingModalProps = {
   form: {
     description: string;
     address: string;
-    type: string;
-    price: string;
     space: string;
     notes: string;
     purpose: number;
     customPurpose: string;
     legalStatus: number | null;
+    hasElectricityMeter: boolean;
+    hasWaterMeter: boolean;
   };
   loading: boolean;
   onClose: () => void;
@@ -21,13 +21,13 @@ type AddOutbuildingModalProps = {
   onChange: (form: { 
     description: string; 
     address: string; 
-    type: string; 
-    price: string; 
     space: string; 
     notes: string;
     purpose: number;
     customPurpose: string;
     legalStatus: number | null;
+    hasElectricityMeter: boolean;
+    hasWaterMeter: boolean;
   }) => void;
 };
 
@@ -99,28 +99,14 @@ export default function AddOutbuildingModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">النوع</label>
-            <select
-              value={form.type}
-              onChange={e => onChange({ ...form, type: e.target.value })}
-              required
-              className="w-full border rounded px-3 py-2"
-            >
-              <option value="">اختر النوع</option>
-              <option value="0">محل</option>
-              <option value="1">شقة</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-semibold">الغرض من الملحق</label>
+            <label className="block mb-1 font-semibold">النشاط</label>
             <select
               value={form.purpose}
               onChange={e => onChange({ ...form, purpose: parseInt(e.target.value) })}
               required
               className="w-full border rounded px-3 py-2"
             >
-              <option value="">اختر الغرض</option>
+              <option value="">اختر النشاط</option>
               {purposes.map(p => (
                 <option key={p.value} value={p.value}>{p.label}</option>
               ))}
@@ -129,14 +115,14 @@ export default function AddOutbuildingModal({
 
           {form.purpose === OutbuildingPurpose.Other && (
             <div>
-              <label className="block mb-1 font-semibold">غرض آخر (يرجى التحديد)</label>
+              <label className="block mb-1 font-semibold">نشاط آخر (يرجى التحديد)</label>
               <input
                 type="text"
                 value={form.customPurpose}
                 onChange={e => onChange({ ...form, customPurpose: e.target.value })}
                 required
                 className="w-full border rounded px-3 py-2"
-                placeholder="اكتب الغرض المخصص..."
+                placeholder="اكتب النشاط المخصص..."
               />
             </div>
           )}
@@ -153,17 +139,6 @@ export default function AddOutbuildingModal({
               <option value={LegalStatus.Encroachment}>{getLegalStatusLabel(LegalStatus.Encroachment)}</option>
               <option value={LegalStatus.Stable}>{getLegalStatusLabel(LegalStatus.Stable)}</option>
             </select>
-          </div>
-
-          <div>
-            <label className="block mb-1 font-semibold">السعر</label>
-            <input
-              type="text"
-              value={form.price}
-              onChange={e => onChange({ ...form, price: e.target.value })}
-              required
-              className="w-full border rounded px-3 py-2"
-            />
           </div>
 
           <div>
@@ -185,6 +160,30 @@ export default function AddOutbuildingModal({
               rows={4}
               className="w-full border rounded px-3 py-2"
             />
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hasElectricityMeter}
+                onChange={e => onChange({ ...form, hasElectricityMeter: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold">يوجد عداد كهرباء</span>
+            </label>
+          </div>
+
+          <div>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={form.hasWaterMeter}
+                onChange={e => onChange({ ...form, hasWaterMeter: e.target.checked })}
+                className="w-5 h-5"
+              />
+              <span className="font-semibold">يوجد عداد مياه</span>
+            </label>
           </div>
 
           <div className="col-span-full flex justify-end gap-3 mt-4">

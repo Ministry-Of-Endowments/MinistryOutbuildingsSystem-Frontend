@@ -40,7 +40,7 @@ export default function OutbuildingDetailsModal({
               <td className="p-3 border border-gray-300">{getOutbuildingTypeLabel(outbuilding.type)}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الغرض</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النشاط</td>
               <td className="p-3 border border-gray-300">{outbuilding.purposeText || '-'}</td>
             </tr>
             <tr>
@@ -64,7 +64,7 @@ export default function OutbuildingDetailsModal({
               <td className="p-3 border border-gray-300">{outbuilding.space || '-'}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">السعر</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">قيمة حق الانتفاع</td>
               <td className="p-3 border border-gray-300">{outbuilding.price || '-'}</td>
             </tr>
             <tr>
@@ -78,6 +78,14 @@ export default function OutbuildingDetailsModal({
             <tr>
               <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ القبول</td>
               <td className="p-3 border border-gray-300">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
+            </tr>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">عداد كهرباء</td>
+              <td className="p-3 border border-gray-300">{outbuilding.hasElectricityMeter ? 'نعم' : 'لا'}</td>
+            </tr>
+            <tr>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">عداد مياه</td>
+              <td className="p-3 border border-gray-300">{outbuilding.hasWaterMeter ? 'نعم' : 'لا'}</td>
             </tr>
             {outbuilding.notes && (
               <tr>

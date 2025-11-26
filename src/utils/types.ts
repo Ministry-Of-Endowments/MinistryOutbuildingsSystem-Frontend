@@ -104,6 +104,8 @@ export interface Outbuilding {
   purposeText: string;
   legalStatus?: LegalStatus;
   legalStatusText?: string;
+  hasElectricityMeter?: boolean;
+  hasWaterMeter?: boolean;
 }
 
 export interface Administration {
