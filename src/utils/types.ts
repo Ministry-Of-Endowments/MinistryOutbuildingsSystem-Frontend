@@ -122,6 +122,7 @@ export interface Directorate {
 export interface PurposeOption {
   value: number;
   label: string;
+  isCustom?: boolean;
 }
 
 // DTOs for creating/updating

@@ -18,6 +18,7 @@ type OutbuildingsListModalProps = {
     maxSize?: number | null;
     status?: boolean | null;
     purpose?: number | null;
+    customPurpose?: string;
     legalStatus?: number | null;
     hasElectricityMeter?: boolean | null;
     hasWaterMeter?: boolean | null;
@@ -44,6 +45,7 @@ export default function OutbuildingsListModal({
     maxSize: '',
     status: null as boolean | null,
     purpose: null as number | null,
+    customPurpose: '',
     legalStatus: null as number | null,
     hasElectricityMeter: null as boolean | null,
     hasWaterMeter: null as boolean | null,
@@ -96,6 +98,7 @@ export default function OutbuildingsListModal({
       maxSize: filterForm.maxSize ? parseFloat(filterForm.maxSize) : null,
       status: filterForm.status,
       purpose: filterForm.purpose,
+      customPurpose: filterForm.customPurpose || undefined,
       legalStatus: filterForm.legalStatus,
       hasElectricityMeter: filterForm.hasElectricityMeter,
       hasWaterMeter: filterForm.hasWaterMeter,
@@ -111,6 +114,7 @@ export default function OutbuildingsListModal({
       maxSize: '',
       status: null,
       purpose: null,
+      customPurpose: '',
       legalStatus: null,
       hasElectricityMeter: null,
       hasWaterMeter: null,
@@ -129,6 +133,7 @@ export default function OutbuildingsListModal({
       if (filterForm.maxSize) params.append('MaxSpace', filterForm.maxSize);
       if (filterForm.status !== null) params.append('Status', String(filterForm.status));
       if (filterForm.purpose !== null) params.append('Purpose', String(filterForm.purpose));
+      if (filterForm.customPurpose) params.append('CustomPurpose', filterForm.customPurpose);
       if (filterForm.legalStatus !== null) params.append('LegalStatus', String(filterForm.legalStatus));
       if (filterForm.hasElectricityMeter !== null) params.append('HasElectricityMeter', String(filterForm.hasElectricityMeter));
       if (filterForm.hasWaterMeter !== null) params.append('HasWaterMeter', String(filterForm.hasWaterMeter));
@@ -238,15 +243,28 @@ export default function OutbuildingsListModal({
                 <div>
                   <label className="block mb-1 font-semibold text-sm">النشاط</label>
                   <select
-                    value={filterForm.purpose ?? ''}
-                    onChange={e => setFilterForm({ ...filterForm, purpose: e.target.value ? parseInt(e.target.value) : null })}
+                    value={filterForm.customPurpose || (filterForm.purpose ?? '')}
+                    onChange={e => {
+                      const selectedValue = e.target.value;
+                      const selectedPurpose = purposes.find(p => 
+                        p.isCustom ? p.label === selectedValue : String(p.value) === selectedValue
+                      );
+                      
+                      if (selectedPurpose?.isCustom) {
+                        setFilterForm({ ...filterForm, purpose: null, customPurpose: selectedPurpose.label });
+                      } else {
+                        setFilterForm({ ...filterForm, purpose: selectedValue ? parseInt(selectedValue) : null, customPurpose: '' });
+                      }
+                    }}
                     className="w-full border rounded px-3 py-2"
                     style={{ maxHeight: '300px', overflowY: 'auto' }}
                     size={1}
                   >
                     <option value="">الكل</option>
-                    {purposes.map(p => (
-                      <option key={p.value} value={p.value}>{p.label}</option>
+                    {purposes.map((p, idx) => (
+                      <option key={idx} value={p.isCustom ? p.label : p.value}>
+                        {p.label}
+                      </option>
                     ))}
                   </select>
                 </div>
