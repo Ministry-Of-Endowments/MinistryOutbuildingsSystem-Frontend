@@ -63,15 +63,15 @@ export default function OutbuildingDetailsModal({
               <td className="p-3 border border-gray-300">{outbuilding.price || '-'}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ البدء</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ بدء العقد</td>
               <td className="p-3 border border-gray-300">{outbuilding.startDate ? new Date(outbuilding.startDate).toLocaleDateString('ar-EG') : '-'}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ الانتهاء</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ انتهاء العقد</td>
               <td className="p-3 border border-gray-300">{outbuilding.endDate ? new Date(outbuilding.endDate).toLocaleDateString('ar-EG') : '-'}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ القبول</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ قبول اللجنة</td>
               <td className="p-3 border border-gray-300">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
             </tr>
             <tr>
