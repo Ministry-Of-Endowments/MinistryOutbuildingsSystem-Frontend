@@ -287,6 +287,7 @@ export default function MosquesPage() {
         if (filter.mosqueName) params.append('mosqueName', filter.mosqueName);
         if (filter.status !== undefined && filter.status !== null) params.append('status', filter.status.toString());
         if (filter.purpose !== undefined && filter.purpose !== null) params.append('purpose', filter.purpose.toString());
+        if (filter.customPurpose) params.append('customPurpose', filter.customPurpose);
         if (filter.legalStatus !== undefined && filter.legalStatus !== null) params.append('legalStatus', filter.legalStatus.toString());
         if (filter.minSize !== undefined && filter.minSize !== null) params.append('minSpace', filter.minSize.toString());
         if (filter.maxSize !== undefined && filter.maxSize !== null) params.append('maxSpace', filter.maxSize.toString());
