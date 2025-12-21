@@ -118,6 +118,45 @@ export default function OutbuildingsListModal({
     onFilter({});
   };
 
+  const handleExport = async () => {
+    try {
+      const params = new URLSearchParams();
+      
+      if (filterForm.directorateName) params.append('DirectorateName', filterForm.directorateName);
+      if (filterForm.administrationName) params.append('AdministrationName', filterForm.administrationName);
+      if (filterForm.mosqueName) params.append('MosqueName', filterForm.mosqueName);
+      if (filterForm.minSize) params.append('MinSpace', filterForm.minSize);
+      if (filterForm.maxSize) params.append('MaxSpace', filterForm.maxSize);
+      if (filterForm.status !== null) params.append('Status', String(filterForm.status));
+      if (filterForm.purpose !== null) params.append('Purpose', String(filterForm.purpose));
+      if (filterForm.legalStatus !== null) params.append('LegalStatus', String(filterForm.legalStatus));
+      if (filterForm.hasElectricityMeter !== null) params.append('HasElectricityMeter', String(filterForm.hasElectricityMeter));
+      if (filterForm.hasWaterMeter !== null) params.append('HasWaterMeter', String(filterForm.hasWaterMeter));
+
+      const queryString = params.toString();
+      const url = `/Outbuildings/export-mosques-outbuildings${queryString ? `?${queryString}` : ''}`;
+      
+      const res = await apiFetch(url);
+      
+      if (!res.ok) {
+        throw new Error('فشل في تصدير البيانات');
+      }
+
+      const blob = await res.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = downloadUrl;
+      link.download = `MosquesOutbuildings_${new Date().getTime()}.xlsx`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(downloadUrl);
+    } catch (error) {
+      console.error('Error exporting:', error);
+      alert('حدث خطأ أثناء التصدير');
+    }
+  };
+
   // Get administrations for selected directorate
   const selectedDirectorate = directorates.find(d => d.name === filterForm.directorateName);
   const availableAdministrations = selectedDirectorate?.administrations || [];
@@ -290,6 +329,12 @@ export default function OutbuildingsListModal({
                   className="px-4 py-2 border rounded hover:bg-gray-50"
                 >
                   إعادة تعيين
+                </button>
+                <button
+                  onClick={handleExport}
+                  className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700"
+                >
+                  تصدير إلى Excel
                 </button>
               </div>
             </div>
