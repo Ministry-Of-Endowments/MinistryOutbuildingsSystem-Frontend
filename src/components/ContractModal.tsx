@@ -41,7 +41,7 @@ export default function ContractModal({
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 font-semibold">تاريخ البداية</label>
+            <label className="block mb-1 font-semibold">تاريخ بدء العقد</label>
             <input
               type="date"
               value={form.startDate}
@@ -52,7 +52,7 @@ export default function ContractModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">تاريخ النهاية</label>
+            <label className="block mb-1 font-semibold">تاريخ انتهاء العقد</label>
             <input
               type="date"
               value={form.endDate}
@@ -97,7 +97,7 @@ export default function ContractModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">تاريخ موافقة اللجنة</label>
+            <label className="block mb-1 font-semibold">تاريخ قبول اللجنة</label>
             <input
               type="date"
               value={form.committeeApprovalDate}
