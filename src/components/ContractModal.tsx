@@ -63,7 +63,7 @@ export default function ContractModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">اسم المستأجر</label>
+            <label className="block mb-1 font-semibold">اسم المنتفع</label>
             <input
               type="text"
               value={form.tenantName}
@@ -74,7 +74,7 @@ export default function ContractModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">رقم بطاقة المستأجر</label>
+            <label className="block mb-1 font-semibold">رقم بطاقة المنتفع</label>
             <input
               type="text"
               value={form.tenantNationalId}

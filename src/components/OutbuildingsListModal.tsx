@@ -369,14 +369,14 @@ export default function OutbuildingsListModal({
                 <th className="p-2 border whitespace-nowrap">النشاط</th>
                 <th className="p-2 border whitespace-nowrap">الحالة القانونية</th>
                 <th className="p-2 border whitespace-nowrap">الحالة</th>
-                <th className="p-2 border whitespace-nowrap">اسم المستأجر</th>
+                <th className="p-2 border whitespace-nowrap">اسم المنتفع</th>
                 <th className="p-2 border whitespace-nowrap">الرقم القومي</th>
                 <th className="p-2 border whitespace-nowrap">المساحة</th>
                 <th className="p-2 border whitespace-nowrap">قيمة حق الانتفاع</th>
                 <th className="p-2 border whitespace-nowrap">عداد كهرباء</th>
                 <th className="p-2 border whitespace-nowrap">عداد مياه</th>
-                <th className="p-2 border whitespace-nowrap">تاريخ البدء</th>
-                <th className="p-2 border whitespace-nowrap">تاريخ الانتهاء</th>
+                <th className="p-2 border whitespace-nowrap">تاريخ بدء العقد</th>
+                <th className="p-2 border whitespace-nowrap">تاريخ انتهاء العقد</th>
                 <th className="p-2 border whitespace-nowrap">الإجراءات</th>
               </tr>
             </thead>

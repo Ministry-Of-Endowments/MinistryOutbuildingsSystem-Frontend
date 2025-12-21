@@ -213,13 +213,13 @@ export default function OutbuildingEditModal({
             />
           </div>
           <div>
-            <label className="block mb-1 font-semibold">اسم المستأجر</label>
+            <label className="block mb-1 font-semibold">اسم المنتفع</label>
             <input
               type="text"
               value={form.tenantName}
               onChange={e => onChange({ ...form, tenantName: e.target.value })}
               className="w-full border rounded px-3 py-2"
-              placeholder="اسم المستأجر (اختياري)"
+              placeholder="اسم المنتفع (اختياري)"
             />
           </div>
           <div>

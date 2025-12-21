@@ -47,7 +47,7 @@ export default function OutbuildingDetailsModal({
               <td className="p-3 border border-gray-300">{outbuilding.status ? 'مستغل' : 'غير مستغل'}</td>
             </tr>
             <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">اسم المستأجر</td>
+              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">اسم المنتفع</td>
               <td className="p-3 border border-gray-300">{outbuilding.tenantName || '-'}</td>
             </tr>
             <tr>
