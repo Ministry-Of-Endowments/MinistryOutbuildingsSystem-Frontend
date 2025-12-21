@@ -1,5 +1,4 @@
 import type { Outbuilding } from '../utils/types';
-import { getOutbuildingTypeLabel } from '../utils/types';
 import { getBackendUrl } from '../utils/api';
 
 type OutbuildingDetailsModalProps = {
@@ -34,10 +33,6 @@ export default function OutbuildingDetailsModal({
             <tr>
               <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العنوان</td>
               <td className="p-3 border border-gray-300">{outbuilding.address || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النوع</td>
-              <td className="p-3 border border-gray-300">{getOutbuildingTypeLabel(outbuilding.type)}</td>
             </tr>
             <tr>
               <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النشاط</td>

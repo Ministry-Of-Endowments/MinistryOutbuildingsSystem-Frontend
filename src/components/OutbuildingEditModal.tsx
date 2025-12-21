@@ -113,18 +113,6 @@ export default function OutbuildingEditModal({
             />
           </div>
           <div>
-            <label className="block mb-1 font-semibold">النوع</label>
-            <select
-              value={form.type}
-              onChange={e => onChange({ ...form, type: parseInt(e.target.value) })}
-              className="w-full border rounded px-3 py-2"
-              required
-            >
-              <option value={0}>محل</option>
-              <option value={1}>شقة</option>
-            </select>
-          </div>
-          <div>
             <label className="block mb-1 font-semibold">النشاط</label>
             <select
               value={form.purpose}
