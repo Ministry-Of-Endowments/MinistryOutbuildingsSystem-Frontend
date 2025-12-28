@@ -429,13 +429,27 @@ export default function OutbuildingsPage() {
         </div>
 
         {showFilters && (
-          <div className="mt-3 p-4 border rounded bg-white">
+          <div 
+            className="mt-3 p-4 border rounded bg-white"
+            onKeyDown={e => {
+              if (e.key === 'Escape') {
+                handleResetFilters();
+              }
+            }}
+            tabIndex={0}
+          >
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block mb-1 font-semibold text-sm">المديرية</label>
                 <select
                   value={filterForm.directorateName}
                   onChange={e => handleDirectorateChange(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -450,6 +464,12 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.administrationName}
                   onChange={e => setFilterForm({ ...filterForm, administrationName: e.target.value })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter' && filterForm.directorateName) {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   disabled={!filterForm.directorateName}
                   className={`w-full border rounded px-3 py-2 ${!filterForm.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                 >
@@ -474,6 +494,12 @@ export default function OutbuildingsPage() {
                       }
                     }
                   }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   maxLength={200}
                   placeholder="ابحث عن مسجد..."
                   className={`w-full border rounded px-3 py-2 ${filterErrors.mosqueName ? 'border-red-500' : ''}`}
@@ -488,6 +514,12 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.status === null ? '' : filterForm.status.toString()}
                   onChange={e => setFilterForm({ ...filterForm, status: e.target.value === '' ? null : e.target.value === 'true' })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -512,6 +544,12 @@ export default function OutbuildingsPage() {
                       setFilterForm({ ...filterForm, purpose: selectedValue ? parseInt(selectedValue) : null, customPurpose: '' });
                     }
                   }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -528,6 +566,12 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.legalStatus ?? ''}
                   onChange={e => setFilterForm({ ...filterForm, legalStatus: e.target.value ? parseInt(e.target.value) : null })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -549,6 +593,12 @@ export default function OutbuildingsPage() {
                     setFilterForm({ ...filterForm, minSize: value });
                     if (filterErrors.minSize) {
                       setFilterErrors({ ...filterErrors, minSize: '' });
+                    }
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
                     }
                   }}
                   placeholder="الحد الأدنى"
@@ -573,6 +623,12 @@ export default function OutbuildingsPage() {
                       setFilterErrors({ ...filterErrors, maxSize: '' });
                     }
                   }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   placeholder="الحد الأقصى"
                   className={`w-full border rounded px-3 py-2 ${filterErrors.maxSize ? 'border-red-500' : ''}`}
                 />
@@ -586,6 +642,12 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.hasElectricityMeter === null ? '' : String(filterForm.hasElectricityMeter)}
                   onChange={e => setFilterForm({ ...filterForm, hasElectricityMeter: e.target.value === '' ? null : e.target.value === 'true' })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -599,6 +661,12 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.hasWaterMeter === null ? '' : String(filterForm.hasWaterMeter)}
                   onChange={e => setFilterForm({ ...filterForm, hasWaterMeter: e.target.value === '' ? null : e.target.value === 'true' })}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleApplyFilters();
+                    }
+                  }}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -661,7 +729,7 @@ export default function OutbuildingsPage() {
                 <td className="p-3 border">{outbuilding.directorateName || '-'}</td>
                 <td className="p-3 border">{outbuilding.administrationName || '-'}</td>
                 <td className="p-3 border">{outbuilding.purposeText || '-'}</td>
-                <td className="p-3 border">{outbuilding.status ? 'مؤجر' : 'غير مؤجر'}</td>
+                <td className="p-3 border">{outbuilding.status ? 'مستغل' : 'غير مستغل'}</td>
                 <td className="p-3 border">{outbuilding.space || '-'}</td>
                 <td className="p-2 border w-64">
                   <div className="flex gap-2">
