@@ -40,7 +40,6 @@ export default function OutbuildingsPage() {
   });
   const [outbuildingEditForm, setOutbuildingEditForm] = useState({
     description: '',
-    address: '',
     type: 0,
     price: '',
     space: '',
