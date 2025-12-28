@@ -69,7 +69,6 @@ export default function MosquesPage() {
   const [showAddOutbuildingModal, setShowAddOutbuildingModal] = useState(false);
   const [addOutbuildingForm, setAddOutbuildingForm] = useState({
     description: '',
-    address: '',
     space: '',
     notes: '',
     purpose: 1,
