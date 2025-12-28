@@ -170,7 +170,7 @@ export default function OutbuildingsListModal({
     setFilterForm({
       ...filterForm,
       directorateName,
-      administrationName: '', // Reset administration when directorate changes
+      administrationName: '',
     });
   };
 
@@ -365,7 +365,6 @@ export default function OutbuildingsListModal({
               <tr className="bg-gray-50">
                 <th className="p-2 border whitespace-nowrap">#</th>
                 <th className="p-2 border whitespace-nowrap">الوصف</th>
-                <th className="p-2 border whitespace-nowrap">العنوان</th>
                 <th className="p-2 border whitespace-nowrap">النشاط</th>
                 <th className="p-2 border whitespace-nowrap">الحالة القانونية</th>
                 <th className="p-2 border whitespace-nowrap">الحالة</th>
@@ -382,9 +381,9 @@ export default function OutbuildingsListModal({
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan={15} className="p-6 text-center">جارٍ التحميل...</td></tr>
+                <tr><td colSpan={14} className="p-6 text-center">جارٍ التحميل...</td></tr>
               ) : outbuildings.length === 0 ? (
-                <tr><td colSpan={15} className="p-6 text-center text-gray-500">لا توجد ملحقات</td></tr>
+                <tr><td colSpan={14} className="p-6 text-center text-gray-500">لا توجد ملحقات</td></tr>
               ) : outbuildings.filter(item => item != null).map((item, idx) => {
                 // Check if contract ends within 3 months
                 let rowColor = '';
@@ -403,7 +402,6 @@ export default function OutbuildingsListModal({
                 <tr key={item.id} className={`hover:bg-gray-50 ${rowColor}`}>
                   <td className="p-2 border whitespace-nowrap">{idx + 1}</td>
                   <td className="p-2 border whitespace-nowrap">{item.description || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.address || '-'}</td>
                   <td className="p-2 border whitespace-nowrap">{item.purposeText || '-'}</td>
                   <td className="p-2 border whitespace-nowrap">{item.legalStatusText || '-'}</td>
                   <td className="p-2 border whitespace-nowrap">

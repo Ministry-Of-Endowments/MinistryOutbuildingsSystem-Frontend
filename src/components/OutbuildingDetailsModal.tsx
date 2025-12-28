@@ -1,8 +1,8 @@
-import type { Outbuilding } from '../utils/types';
+import type { Outbuilding, OutbuildingWithMosque } from '../utils/types';
 import { getBackendUrl } from '../utils/api';
 
 type OutbuildingDetailsModalProps = {
-  outbuilding: Outbuilding;
+  outbuilding: Outbuilding | OutbuildingWithMosque;
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -26,13 +26,29 @@ export default function OutbuildingDetailsModal({
 
         <table className="w-full text-right mb-6 border-collapse border border-gray-300">
           <tbody>
+            {'mosqueName' in outbuilding && outbuilding.mosqueName && (
+              <>
+                <tr>
+                  <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">اسم المسجد</td>
+                  <td className="p-3 border border-gray-300">{outbuilding.mosqueName || '-'}</td>
+                </tr>
+                {outbuilding.directorateName && (
+                  <tr>
+                    <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">المديرية</td>
+                    <td className="p-3 border border-gray-300">{outbuilding.directorateName || '-'}</td>
+                  </tr>
+                )}
+                {outbuilding.administrationName && (
+                  <tr>
+                    <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الإدارة</td>
+                    <td className="p-3 border border-gray-300">{outbuilding.administrationName || '-'}</td>
+                  </tr>
+                )}
+              </>
+            )}
             <tr>
               <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الوصف</td>
               <td className="p-3 border border-gray-300">{outbuilding.description || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العنوان</td>
-              <td className="p-3 border border-gray-300">{outbuilding.address || '-'}</td>
             </tr>
             <tr>
               <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النشاط</td>

@@ -87,7 +87,6 @@ export interface Mosque {
 export interface Outbuilding {
   id: number;
   description: string;
-  address: string;
   type: OutbuildingType;
   status: boolean;
   startDate?: string;
@@ -106,6 +105,16 @@ export interface Outbuilding {
   legalStatusText?: string;
   hasElectricityMeter?: boolean;
   hasWaterMeter?: boolean;
+}
+
+export interface OutbuildingWithMosque extends Outbuilding {
+  mosqueId?: number;
+  mosqueName?: string;
+  mosqueAddress?: string;
+  administrationId?: number;
+  administrationName?: string;
+  directorateId?: number;
+  directorateName?: string;
 }
 
 export interface Administration {

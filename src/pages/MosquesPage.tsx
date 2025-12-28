@@ -78,6 +78,15 @@ export default function MosquesPage() {
     legalStatus: null as number | null,
     hasElectricityMeter: false,
     hasWaterMeter: false,
+    status: false,
+    startDate: '',
+    endDate: '',
+    acceptanceDate: '',
+    price: '',
+    tenantName: '',
+    tenantNationalId: '',
+    committeeApprovalDate: '',
+    contract: null as File | null,
   });
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<any>({});
@@ -353,7 +362,6 @@ export default function MosquesPage() {
     setSelectedOutbuilding(item);
     setOutbuildingEditForm({
       description: item.description,
-      address: item.address,
       type: item.type,
       price: item.price?.toString() || '',
       space: item.space?.toString() || '',
@@ -381,7 +389,6 @@ export default function MosquesPage() {
     try {
       const payload = {
         description: outbuildingEditForm.description,
-        address: outbuildingEditForm.address,
         type: outbuildingEditForm.type,
         notes: outbuildingEditForm.notes || null,
         price: parseFloat(outbuildingEditForm.price),
@@ -525,7 +532,6 @@ export default function MosquesPage() {
     setSelected(mosque);
     setAddOutbuildingForm({
       description: '',
-      address: '',
       space: '',
       notes: '',
       purpose: 1,
@@ -533,6 +539,15 @@ export default function MosquesPage() {
       legalStatus: null,
       hasElectricityMeter: false,
       hasWaterMeter: false,
+      status: false,
+      startDate: '',
+      endDate: '',
+      acceptanceDate: '',
+      price: '',
+      tenantName: '',
+      tenantNationalId: '',
+      committeeApprovalDate: '',
+      contract: null,
     });
     setShowModal(false);
     setShowAddOutbuildingModal(true);
@@ -544,22 +559,51 @@ export default function MosquesPage() {
 
     setAddOutbuildingLoading(true);
     try {
-      const basicPayload = {
-        description: addOutbuildingForm.description,
-        address: addOutbuildingForm.address,
-        space: parseFloat(addOutbuildingForm.space),
-        notes: addOutbuildingForm.notes,
-        purpose: addOutbuildingForm.purpose,
-        customPurpose: addOutbuildingForm.customPurpose || null,
-        legalStatus: addOutbuildingForm.legalStatus,
-        hasElectricityMeter: addOutbuildingForm.hasElectricityMeter,
-        hasWaterMeter: addOutbuildingForm.hasWaterMeter,
-      };
+      const formData = new FormData();
+      formData.append('description', addOutbuildingForm.description);
+      formData.append('space', addOutbuildingForm.space);
+      formData.append('notes', addOutbuildingForm.notes || '');
+      formData.append('purpose', addOutbuildingForm.purpose.toString());
+      if (addOutbuildingForm.customPurpose) {
+        formData.append('customPurpose', addOutbuildingForm.customPurpose);
+      }
+      if (addOutbuildingForm.legalStatus !== null) {
+        formData.append('legalStatus', addOutbuildingForm.legalStatus.toString());
+      }
+      formData.append('hasElectricityMeter', addOutbuildingForm.hasElectricityMeter.toString());
+      formData.append('hasWaterMeter', addOutbuildingForm.hasWaterMeter.toString());
+      formData.append('status', addOutbuildingForm.status.toString());
+      
+      if (addOutbuildingForm.status) {
+        if (addOutbuildingForm.startDate) {
+          formData.append('startDate', addOutbuildingForm.startDate);
+        }
+        if (addOutbuildingForm.endDate) {
+          formData.append('endDate', addOutbuildingForm.endDate);
+        }
+        if (addOutbuildingForm.acceptanceDate) {
+          formData.append('acceptanceDate', addOutbuildingForm.acceptanceDate);
+        }
+        if (addOutbuildingForm.price) {
+          formData.append('price', addOutbuildingForm.price);
+        }
+        if (addOutbuildingForm.tenantName) {
+          formData.append('tenantName', addOutbuildingForm.tenantName);
+        }
+        if (addOutbuildingForm.tenantNationalId) {
+          formData.append('tenantNationalId', addOutbuildingForm.tenantNationalId);
+        }
+        if (addOutbuildingForm.committeeApprovalDate) {
+          formData.append('committeeApprovalDate', addOutbuildingForm.committeeApprovalDate);
+        }
+        if (addOutbuildingForm.contract) {
+          formData.append('contract', addOutbuildingForm.contract);
+        }
+      }
       
       const res = await apiFetch(`/Outbuildings/${selected.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(basicPayload),
+        body: formData,
       });
       const data = await res.json();
       

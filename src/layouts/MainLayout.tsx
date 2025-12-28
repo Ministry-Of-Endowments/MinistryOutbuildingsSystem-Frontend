@@ -28,6 +28,7 @@ export default function MainLayout() {
           <nav className="flex md:flex-col gap-2">
             <Link to="/mosques" className={`px-3 py-2 rounded text-sm ${isActive('/mosques') || isActive('/') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>المساجد</Link>
             <Link to="/add-mosque" className={`px-3 py-2 rounded text-sm ${isActive('/add-mosque') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>إضافة مسجد</Link>
+            <Link to="/outbuildings" className={`px-3 py-2 rounded text-sm ${isActive('/outbuildings') ? 'bg-(--primary) text-white' : 'hover:bg-gray-100'}`}>جميع الملحقات</Link>
           </nav>
         </aside>
 

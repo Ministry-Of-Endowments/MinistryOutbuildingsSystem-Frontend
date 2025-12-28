@@ -4,6 +4,7 @@ import LoginPage, { type AuthInfo } from './pages/LoginPage';
 import MainLayout from './layouts/MainLayout';
 import MosquesPage from './pages/MosquesPage';
 import AddMosquePage from './pages/AddMosquePage';
+import OutbuildingsPage from './pages/OutbuildingsPage';
 
 export default function App() {
   const [auth, setAuth] = useState<AuthInfo | null>(null);
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="/" element={<MosquesPage />} />
           <Route path="/mosques" element={<MosquesPage />} />
           <Route path="/add-mosque" element={<AddMosquePage />} />
+          <Route path="/outbuildings" element={<OutbuildingsPage />} />
         </Route>
       </Routes>
     </Router>

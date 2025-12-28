@@ -6,7 +6,6 @@ type OutbuildingEditModalProps = {
   outbuildingDescription: string;
   form: {
     description: string;
-    address: string;
     type: number;
     price: string;
     space: string;
@@ -28,7 +27,6 @@ type OutbuildingEditModalProps = {
   onSubmit: (e: React.FormEvent) => void;
   onChange: (form: {
     description: string;
-    address: string;
     type: number;
     price: string;
     space: string;
@@ -93,24 +91,20 @@ export default function OutbuildingEditModal({
 
         <form onSubmit={onSubmit} className="space-y-4">
           <div>
-            <label className="block mb-1 font-semibold">الوصف</label>
-            <input
-              type="text"
+            <label className="block mb-1 font-semibold">وصف الملحق <span className="text-red-500">*</span></label>
+            <textarea
               value={form.description}
               onChange={e => onChange({ ...form, description: e.target.value })}
               className="w-full border rounded px-3 py-2"
               required
+              minLength={3}
+              maxLength={500}
+              rows={3}
+              placeholder="أدخل وصف الملحق..."
             />
-          </div>
-          <div>
-            <label className="block mb-1 font-semibold">العنوان</label>
-            <input
-              type="text"
-              value={form.address}
-              onChange={e => onChange({ ...form, address: e.target.value })}
-              className="w-full border rounded px-3 py-2"
-              required
-            />
+            {form.description && form.description.length < 3 && (
+              <p className="text-red-500 text-sm mt-1">يجب أن يكون الوصف على الأقل 3 أحرف</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-semibold">النشاط</label>
@@ -128,15 +122,20 @@ export default function OutbuildingEditModal({
           </div>
           {form.purpose === OutbuildingPurpose.Other && (
             <div>
-              <label className="block mb-1 font-semibold">نشاط آخر (يرجى التحديد)</label>
+              <label className="block mb-1 font-semibold">نشاط آخر (يرجى التحديد) <span className="text-red-500">*</span></label>
               <input
                 type="text"
                 value={form.customPurpose}
                 onChange={e => onChange({ ...form, customPurpose: e.target.value })}
                 required
+                minLength={3}
+                maxLength={100}
                 className="w-full border rounded px-3 py-2"
                 placeholder="اكتب النشاط المخصص..."
               />
+              {form.customPurpose && form.customPurpose.length < 3 && (
+                <p className="text-red-500 text-sm mt-1">يجب أن يكون النشاط على الأقل 3 أحرف</p>
+              )}
             </div>
           )}
           <div>
@@ -153,26 +152,46 @@ export default function OutbuildingEditModal({
             </select>
           </div>
           <div>
-            <label className="block mb-1 font-semibold">قيمة حق الانتفاع</label>
+            <label className="block mb-1 font-semibold">قيمة حق الانتفاع <span className="text-red-500">*</span></label>
             <input
               type="number"
               step="0.01"
+              min="0"
               value={form.price}
-              onChange={e => onChange({ ...form, price: e.target.value })}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                  onChange({ ...form, price: value });
+                }
+              }}
               className="w-full border rounded px-3 py-2"
               required
+              placeholder="0.00"
             />
+            {form.price && (isNaN(parseFloat(form.price)) || parseFloat(form.price) < 0) && (
+              <p className="text-red-500 text-sm mt-1">يجب أن تكون القيمة رقم موجب</p>
+            )}
           </div>
           <div>
-            <label className="block mb-1 font-semibold">المساحة</label>
+            <label className="block mb-1 font-semibold">المساحة (متر مربع) <span className="text-red-500">*</span></label>
             <input
               type="number"
               step="0.01"
+              min="0"
               value={form.space}
-              onChange={e => onChange({ ...form, space: e.target.value })}
+              onChange={e => {
+                const value = e.target.value;
+                if (value === '' || (!isNaN(parseFloat(value)) && parseFloat(value) >= 0)) {
+                  onChange({ ...form, space: value });
+                }
+              }}
               className="w-full border rounded px-3 py-2"
               required
+              placeholder="0.00"
             />
+            {form.space && (isNaN(parseFloat(form.space)) || parseFloat(form.space) < 0) && (
+              <p className="text-red-500 text-sm mt-1">يجب أن تكون المساحة رقم موجب</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-semibold">الحالة</label>
@@ -191,8 +210,12 @@ export default function OutbuildingEditModal({
               type="date"
               value={form.startDate}
               onChange={e => onChange({ ...form, startDate: e.target.value })}
+              max={form.endDate || undefined}
               className="w-full border rounded px-3 py-2"
             />
+            {form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate) && (
+              <p className="text-red-500 text-sm mt-1">تاريخ البداية يجب أن يكون قبل تاريخ النهاية</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-semibold">تاريخ النهاية</label>
@@ -200,8 +223,12 @@ export default function OutbuildingEditModal({
               type="date"
               value={form.endDate}
               onChange={e => onChange({ ...form, endDate: e.target.value })}
+              min={form.startDate || undefined}
               className="w-full border rounded px-3 py-2"
             />
+            {form.startDate && form.endDate && new Date(form.startDate) > new Date(form.endDate) && (
+              <p className="text-red-500 text-sm mt-1">تاريخ النهاية يجب أن يكون بعد تاريخ البداية</p>
+            )}
           </div>
           <div>
             <label className="block mb-1 font-semibold">تاريخ القبول</label>
@@ -227,10 +254,19 @@ export default function OutbuildingEditModal({
             <input
               type="text"
               value={form.tenantNationalId}
-              onChange={e => onChange({ ...form, tenantNationalId: e.target.value })}
+              onChange={e => {
+                const value = e.target.value.replace(/\D/g, '');
+                if (value.length <= 14) {
+                  onChange({ ...form, tenantNationalId: value });
+                }
+              }}
+              maxLength={14}
               className="w-full border rounded px-3 py-2"
-              placeholder="الرقم القومي (اختياري)"
+              placeholder="الرقم القومي (14 رقم)"
             />
+            {form.tenantNationalId && form.tenantNationalId.length !== 14 && form.tenantNationalId.length > 0 && (
+              <p className="text-red-500 text-sm mt-1">يجب أن يكون الرقم القومي 14 رقم</p>
+            )}
           </div>
           
           <div>
