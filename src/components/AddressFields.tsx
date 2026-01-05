@@ -62,8 +62,18 @@ export default function AddressFields({
   const selectedDepartment = availableDepartments.find(d => d.id === Number(departmentId));
   const availableSheikhdoms = selectedDepartment?.sheikhdoms || [];
 
+  console.log('AddressFields Debug:', {
+    governorateId,
+    selectedGovernorate: selectedGovernorate?.name,
+    departmentsCount: availableDepartments.length,
+    departmentId,
+    selectedDepartment: selectedDepartment?.name,
+    sheikhdomsCount: availableSheikhdoms.length
+  });
+
   function handleGovernorateChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
+    console.log('Governorate changed to:', value);
     onGovernorateChange(value);
   }
 
