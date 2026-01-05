@@ -200,7 +200,7 @@ export default function OutbuildingsPage() {
     res.then(response => response.json()).then(data => {
       if (data.status === 'success' && data.data) {
         const apiOutbuildings = Array.isArray(data.data) ? data.data : [data.data];
-        setOutbuildings(apiOutbuildings.f                                                                                                                                                                           ilter((item: OutbuildingWithMosque | null) => item != null));
+        setOutbuildings(apiOutbuildings.filter((item: OutbuildingWithMosque | null) => item != null));
       } else {
         setOutbuildings([]);
       }
