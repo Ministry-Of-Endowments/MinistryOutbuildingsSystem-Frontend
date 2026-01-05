@@ -92,7 +92,7 @@ export default function AddOutbuildingModal({
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-70">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded shadow max-w-4xl w-full p-6 max-h-[90vh] overflow-auto">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">إضافة ملحق - {mosqueName}</h3>

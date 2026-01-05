@@ -32,7 +32,7 @@ export default function ContractModal({
   onChange,
 }: ContractModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-70">
+    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded shadow max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">إضافة عقد - {outbuildingName}</h3>

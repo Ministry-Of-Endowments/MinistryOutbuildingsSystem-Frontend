@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
+import AddressFields from "../components/AddressFields";
 
 type Administration = {
   id: number;
@@ -17,6 +18,10 @@ export default function AddMosquePage() {
     name: "",
     directorateName: "",
     administrationId: "",
+    governorateId: "",
+    departmentId: "",
+    sheikhdomId: "",
+    street: "",
     address: "",
     notes: "",
   });
@@ -66,6 +71,10 @@ export default function AddMosquePage() {
       const payload = {
         name: form.name,
         administrationId: parseInt(form.administrationId),
+        governorateId: parseInt(form.governorateId),
+        departmentId: parseInt(form.departmentId),
+        sheikhdomId: parseInt(form.sheikhdomId),
+        street: form.street,
         address: form.address,
         notes: form.notes,
         Directorate: form.directorateName,
@@ -161,6 +170,18 @@ export default function AddMosquePage() {
             ))}
           </select>
         </div>
+
+        <AddressFields
+          governorateId={form.governorateId}
+          departmentId={form.departmentId}
+          sheikhdomId={form.sheikhdomId}
+          street={form.street}
+          onGovernorateChange={(id) => setForm({ ...form, governorateId: String(id) })}
+          onDepartmentChange={(id) => setForm({ ...form, departmentId: String(id) })}
+          onSheikhdomChange={(id) => setForm({ ...form, sheikhdomId: String(id) })}
+          onStreetChange={(street) => setForm({ ...form, street })}
+          required={true}
+        />
 
         <div className="col-span-full">
           <label className="block mb-1 font-semibold">العنوان</label>
