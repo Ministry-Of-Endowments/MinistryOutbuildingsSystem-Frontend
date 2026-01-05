@@ -122,8 +122,8 @@ export default function OutbuildingEditModal({
               departmentId={form.departmentId}
               sheikhdomId={form.sheikhdomId}
               street={form.street}
-              onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id) })}
-              onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id) })}
+              onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
+              onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
               onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
               onStreetChange={(street) => onChange({ ...form, street })}
               required={true}

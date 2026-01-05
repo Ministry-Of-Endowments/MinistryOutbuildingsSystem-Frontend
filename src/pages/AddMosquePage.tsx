@@ -176,8 +176,8 @@ export default function AddMosquePage() {
           departmentId={form.departmentId}
           sheikhdomId={form.sheikhdomId}
           street={form.street}
-          onGovernorateChange={(id) => setForm({ ...form, governorateId: String(id) })}
-          onDepartmentChange={(id) => setForm({ ...form, departmentId: String(id) })}
+          onGovernorateChange={(id) => setForm({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
+          onDepartmentChange={(id) => setForm({ ...form, departmentId: String(id), sheikhdomId: '' })}
           onSheikhdomChange={(id) => setForm({ ...form, sheikhdomId: String(id) })}
           onStreetChange={(street) => setForm({ ...form, street })}
           required={true}

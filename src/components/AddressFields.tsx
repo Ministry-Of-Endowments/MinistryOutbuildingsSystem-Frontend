@@ -65,14 +65,11 @@ export default function AddressFields({
   function handleGovernorateChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
     onGovernorateChange(value);
-    onDepartmentChange('');
-    onSheikhdomChange('');
   }
 
   function handleDepartmentChange(e: React.ChangeEvent<HTMLSelectElement>) {
     const value = e.target.value;
     onDepartmentChange(value);
-    onSheikhdomChange('');
   }
 
   function handleSheikhdomChange(e: React.ChangeEvent<HTMLSelectElement>) {

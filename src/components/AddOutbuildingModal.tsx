@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { apiFetch } from '../utils/api';
 import { OutbuildingPurpose, LegalStatus, getOutbuildingPurposeLabel, getLegalStatusLabel, type PurposeOption } from '../utils/types';
 import AddressFields from './AddressFields';
+import Portal from './Portal';
 
 type AddOutbuildingModalProps = {
   mosqueName: string;
@@ -92,42 +93,43 @@ export default function AddOutbuildingModal({
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-9999">
-      <div className="bg-white rounded shadow max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">إضافة ملحق - {mosqueName}</h3>
-          <button className="text-gray-600" onClick={onClose}>✖</button>
-        </div>
-
-        <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="col-span-full">
-            <label className="block mb-1 font-semibold">وصف الملحق <span className="text-red-500">*</span></label>
-            <textarea
-              value={form.description}
-              onChange={e => onChange({ ...form, description: e.target.value })}
-              required
-              minLength={3}
-              maxLength={500}
-              rows={3}
-              className="w-full border rounded px-3 py-2"
-              placeholder="أدخل وصف الملحق..."
-            />
-            {form.description && form.description.length < 3 && (
-              <p className="text-red-500 text-sm mt-1">يجب أن يكون الوصف على الأقل 3 أحرف</p>
-            )}
+    <Portal>
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-9999">
+        <div className="bg-white rounded shadow max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto overflow-x-hidden">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-lg font-semibold">إضافة ملحق - {mosqueName}</h3>
+            <button className="text-gray-600" onClick={onClose}>✖</button>
           </div>
 
-          <AddressFields
-            governorateId={form.governorateId}
-            departmentId={form.departmentId}
-            sheikhdomId={form.sheikhdomId}
-            street={form.street}
-            onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id) })}
-            onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id) })}
-            onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
-            onStreetChange={(street) => onChange({ ...form, street })}
-            required={true}
-          />
+          <form onSubmit={onSubmit} className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="col-span-full">
+              <label className="block mb-1 font-semibold">وصف الملحق <span className="text-red-500">*</span></label>
+              <textarea
+                value={form.description}
+                onChange={e => onChange({ ...form, description: e.target.value })}
+                required
+                minLength={3}
+                maxLength={500}
+                rows={3}
+                className="w-full border rounded px-3 py-2"
+                placeholder="أدخل وصف الملحق..."
+              />
+              {form.description && form.description.length < 3 && (
+                <p className="text-red-500 text-sm mt-1">يجب أن يكون الوصف على الأقل 3 أحرف</p>
+              )}
+            </div>
+
+            <AddressFields
+              governorateId={form.governorateId}
+              departmentId={form.departmentId}
+              sheikhdomId={form.sheikhdomId}
+              street={form.street}
+              onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
+              onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
+              onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
+              onStreetChange={(street) => onChange({ ...form, street })}
+              required={true}
+            />
 
           <div>
             <label className="block mb-1 font-semibold">النشاط</label>
@@ -394,5 +396,6 @@ export default function AddOutbuildingModal({
         </form>
       </div>
     </div>
+    </Portal>
   );
 }
