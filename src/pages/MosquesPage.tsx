@@ -294,7 +294,6 @@ export default function MosquesPage() {
     try {
       let url = `/Outbuildings/${mosqueId}`;
       
-      // Add query parameters if filter is provided
       if (filter && Object.keys(filter).length > 0) {
         const params = new URLSearchParams();
         if (filter.administrationName) params.append('administrationName', filter.administrationName);

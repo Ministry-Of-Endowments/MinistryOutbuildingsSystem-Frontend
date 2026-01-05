@@ -40,6 +40,10 @@ export default function OutbuildingsPage() {
   });
   const [outbuildingEditForm, setOutbuildingEditForm] = useState({
     description: '',
+    governorateId: '',
+    departmentId: '',
+    sheikhdomId: '',
+    street: '',
     type: 0,
     price: '',
     space: '',
@@ -240,6 +244,10 @@ export default function OutbuildingsPage() {
     setSelectedOutbuilding(item);
     setOutbuildingEditForm({
       description: item.description,
+      governorateId: item.governorateId?.toString() || '',
+      departmentId: item.departmentId?.toString() || '',
+      sheikhdomId: item.sheikhdomId?.toString() || '',
+      street: item.street || '',
       type: item.type,
       price: item.price?.toString() || '',
       space: item.space?.toString() || '',
@@ -267,6 +275,10 @@ export default function OutbuildingsPage() {
     try {
       const payload = {
         description: outbuildingEditForm.description,
+        governorateId: parseInt(outbuildingEditForm.governorateId),
+        departmentId: parseInt(outbuildingEditForm.departmentId),
+        sheikhdomId: parseInt(outbuildingEditForm.sheikhdomId),
+        street: outbuildingEditForm.street,
         type: outbuildingEditForm.type,
         notes: outbuildingEditForm.notes || null,
         price: parseFloat(outbuildingEditForm.price),
