@@ -90,14 +90,14 @@ export default function AddressFields({
 
   return (
     <>
-      <div>
+      <div className="relative z-30">
         <label className="block mb-1 font-semibold text-sm">
           المحافظة {required && <span className="text-red-500">*</span>}
         </label>
         <select
           value={governorateId}
           onChange={handleGovernorateChange}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded cursor-pointer"
           required={required}
           disabled={disabled}
         >
@@ -110,14 +110,14 @@ export default function AddressFields({
         </select>
       </div>
 
-      <div>
+      <div className="relative z-20">
         <label className="block mb-1 font-semibold text-sm">
           القسم {required && <span className="text-red-500">*</span>}
         </label>
         <select
           value={departmentId}
           onChange={handleDepartmentChange}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded cursor-pointer"
           required={required}
           disabled={disabled || !governorateId}
         >
@@ -130,14 +130,14 @@ export default function AddressFields({
         </select>
       </div>
 
-      <div>
+      <div className="relative z-10">
         <label className="block mb-1 font-semibold text-sm">
           الشياخة {required && <span className="text-red-500">*</span>}
         </label>
         <select
           value={sheikhdomId}
           onChange={handleSheikhdomChange}
-          className="w-full p-2 border rounded"
+          className="w-full p-2 border rounded cursor-pointer"
           required={required}
           disabled={disabled || !departmentId}
         >
