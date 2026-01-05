@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../utils/api';
 import { OutbuildingPurpose, LegalStatus, getOutbuildingPurposeLabel, getLegalStatusLabel, type PurposeOption } from '../utils/types';
+import AddressFields from './AddressFields';
 
 type OutbuildingEditModalProps = {
   outbuildingDescription: string;
   form: {
     description: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
+    street: string;
     type: number;
     price: string;
     space: string;
@@ -27,6 +32,10 @@ type OutbuildingEditModalProps = {
   onSubmit: (e: React.FormEvent) => void;
   onChange: (form: {
     description: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
+    street: string;
     type: number;
     price: string;
     space: string;
@@ -105,6 +114,20 @@ export default function OutbuildingEditModal({
             {form.description && form.description.length < 3 && (
               <p className="text-red-500 text-sm mt-1">يجب أن يكون الوصف على الأقل 3 أحرف</p>
             )}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <AddressFields
+              governorateId={form.governorateId}
+              departmentId={form.departmentId}
+              sheikhdomId={form.sheikhdomId}
+              street={form.street}
+              onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id) })}
+              onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id) })}
+              onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
+              onStreetChange={(street) => onChange({ ...form, street })}
+              required={true}
+            />
           </div>
           <div>
             <label className="block mb-1 font-semibold">النشاط</label>

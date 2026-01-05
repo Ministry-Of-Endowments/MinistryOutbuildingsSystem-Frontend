@@ -50,6 +50,30 @@ export default function OutbuildingDetailsModal({
               <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الوصف</td>
               <td className="p-3 border border-gray-300">{outbuilding.description || '-'}</td>
             </tr>
+            {outbuilding.governorateName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المحافظة</td>
+                <td className="p-3 border border-gray-300">{outbuilding.governorateName}</td>
+              </tr>
+            )}
+            {outbuilding.departmentName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">القسم</td>
+                <td className="p-3 border border-gray-300">{outbuilding.departmentName}</td>
+              </tr>
+            )}
+            {outbuilding.sheikhdomName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشياخة</td>
+                <td className="p-3 border border-gray-300">{outbuilding.sheikhdomName}</td>
+              </tr>
+            )}
+            {outbuilding.street && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشارع</td>
+                <td className="p-3 border border-gray-300">{outbuilding.street}</td>
+              </tr>
+            )}
             <tr>
               <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النشاط</td>
               <td className="p-3 border border-gray-300">{outbuilding.purposeText || '-'}</td>

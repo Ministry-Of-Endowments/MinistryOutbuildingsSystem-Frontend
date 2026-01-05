@@ -72,7 +72,34 @@ export function getLegalStatusLabel(status: LegalStatus): string {
   }
 }
 
-// Type definitions matching backend DTOs
+export interface Sheikhdom {
+  id: number;
+  name: string;
+}
+
+export interface Department {
+  id: number;
+  name: string;
+  sheikhdoms: Sheikhdom[];
+}
+
+export interface Governorate {
+  id: number;
+  name: string;
+  departments: Department[];
+}
+
+export interface Administration {
+  id: number;
+  name: string;
+}
+
+export interface Directorate {
+  id: number;
+  name: string;
+  administrations: Administration[];
+}
+
 export interface Mosque {
   id: number;
   name: string;
@@ -87,6 +114,14 @@ export interface Mosque {
 export interface Outbuilding {
   id: number;
   description: string;
+  address: string;
+  street?: string;
+  governorateId: number;
+  departmentId: number;
+  sheikhdomId: number;
+  governorateName?: string;
+  departmentName?: string;
+  sheikhdomName?: string;
   type: OutbuildingType;
   status: boolean;
   startDate?: string;
@@ -117,17 +152,6 @@ export interface OutbuildingWithMosque extends Outbuilding {
   directorateName?: string;
 }
 
-export interface Administration {
-  id: number;
-  name: string;
-}
-
-export interface Directorate {
-  id: number;
-  name: string;
-  administrations: Administration[];
-}
-
 export interface PurposeOption {
   value: number;
   label: string;
@@ -138,6 +162,10 @@ export interface PurposeOption {
 export interface CreateOutbuildingDto {
   description: string;
   address: string;
+  street?: string;
+  governorateId: number;
+  departmentId: number;
+  sheikhdomId: number;
   type: OutbuildingType;
   price: number;
   space: number;
@@ -145,11 +173,17 @@ export interface CreateOutbuildingDto {
   purpose: OutbuildingPurpose;
   customPurpose?: string;
   legalStatus?: LegalStatus;
+  hasElectricityMeter?: boolean;
+  hasWaterMeter?: boolean;
 }
 
 export interface UpdateOutbuildingDto {
   description: string;
   address: string;
+  street?: string;
+  governorateId: number;
+  departmentId: number;
+  sheikhdomId: number;
   type: OutbuildingType;
   status: boolean;
   startDate?: string;
@@ -161,12 +195,17 @@ export interface UpdateOutbuildingDto {
   purpose: OutbuildingPurpose;
   customPurpose?: string;
   legalStatus?: LegalStatus;
+  hasElectricityMeter?: boolean;
+  hasWaterMeter?: boolean;
 }
 
 export interface OutbuildingFilter {
   directorateName?: string;
   administrationName?: string;
   mosqueName?: string;
+  governorateName?: string;
+  departmentName?: string;
+  sheikhdomName?: string;
   status?: boolean;
   purpose?: OutbuildingPurpose;
   legalStatus?: LegalStatus;

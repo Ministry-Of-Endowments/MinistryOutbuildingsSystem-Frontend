@@ -1,11 +1,16 @@
 import { useState, useEffect } from 'react';
 import { apiFetch } from '../utils/api';
 import { OutbuildingPurpose, LegalStatus, getOutbuildingPurposeLabel, getLegalStatusLabel, type PurposeOption } from '../utils/types';
+import AddressFields from './AddressFields';
 
 type AddOutbuildingModalProps = {
   mosqueName: string;
   form: {
     description: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
+    street: string;
     space: string;
     notes: string;
     purpose: number;
@@ -27,7 +32,11 @@ type AddOutbuildingModalProps = {
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
   onChange: (form: { 
-    description: string; 
+    description: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
+    street: string;
     space: string; 
     notes: string;
     purpose: number;
@@ -68,7 +77,6 @@ export default function AddOutbuildingModal({
         }
       } catch (e) {
         console.error('Failed to fetch purposes:', e);
-        // Fallback to hardcoded values
         setPurposes([
           { value: OutbuildingPurpose.QuranOffices, label: getOutbuildingPurposeLabel(OutbuildingPurpose.QuranOffices) },
           { value: OutbuildingPurpose.Nurseries, label: getOutbuildingPurposeLabel(OutbuildingPurpose.Nurseries) },
@@ -108,6 +116,18 @@ export default function AddOutbuildingModal({
               <p className="text-red-500 text-sm mt-1">يجب أن يكون الوصف على الأقل 3 أحرف</p>
             )}
           </div>
+
+          <AddressFields
+            governorateId={form.governorateId}
+            departmentId={form.departmentId}
+            sheikhdomId={form.sheikhdomId}
+            street={form.street}
+            onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id) })}
+            onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id) })}
+            onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
+            onStreetChange={(street) => onChange({ ...form, street })}
+            required={true}
+          />
 
           <div>
             <label className="block mb-1 font-semibold">النشاط</label>

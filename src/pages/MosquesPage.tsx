@@ -48,6 +48,10 @@ export default function MosquesPage() {
   });
   const [outbuildingEditForm, setOutbuildingEditForm] = useState({
     description: '',
+    governorateId: '',
+    departmentId: '',
+    sheikhdomId: '',
+    street: '',
     type: 0,
     price: '',
     space: '',
@@ -69,6 +73,10 @@ export default function MosquesPage() {
   const [showAddOutbuildingModal, setShowAddOutbuildingModal] = useState(false);
   const [addOutbuildingForm, setAddOutbuildingForm] = useState({
     description: '',
+    governorateId: '',
+    departmentId: '',
+    sheikhdomId: '',
+    street: '',
     space: '',
     notes: '',
     purpose: 1,
@@ -360,6 +368,10 @@ export default function MosquesPage() {
     setSelectedOutbuilding(item);
     setOutbuildingEditForm({
       description: item.description,
+      governorateId: item.governorateId?.toString() || '',
+      departmentId: item.departmentId?.toString() || '',
+      sheikhdomId: item.sheikhdomId?.toString() || '',
+      street: item.street || '',
       type: item.type,
       price: item.price?.toString() || '',
       space: item.space?.toString() || '',
@@ -387,6 +399,10 @@ export default function MosquesPage() {
     try {
       const payload = {
         description: outbuildingEditForm.description,
+        governorateId: parseInt(outbuildingEditForm.governorateId),
+        departmentId: parseInt(outbuildingEditForm.departmentId),
+        sheikhdomId: parseInt(outbuildingEditForm.sheikhdomId),
+        street: outbuildingEditForm.street,
         type: outbuildingEditForm.type,
         notes: outbuildingEditForm.notes || null,
         price: parseFloat(outbuildingEditForm.price),
@@ -530,6 +546,10 @@ export default function MosquesPage() {
     setSelected(mosque);
     setAddOutbuildingForm({
       description: '',
+      governorateId: '',
+      departmentId: '',
+      sheikhdomId: '',
+      street: '',
       space: '',
       notes: '',
       purpose: 1,
@@ -559,6 +579,10 @@ export default function MosquesPage() {
     try {
       const formData = new FormData();
       formData.append('description', addOutbuildingForm.description);
+      formData.append('governorateId', addOutbuildingForm.governorateId);
+      formData.append('departmentId', addOutbuildingForm.departmentId);
+      formData.append('sheikhdomId', addOutbuildingForm.sheikhdomId);
+      formData.append('street', addOutbuildingForm.street);
       formData.append('space', addOutbuildingForm.space);
       formData.append('notes', addOutbuildingForm.notes || '');
       formData.append('purpose', addOutbuildingForm.purpose.toString());
