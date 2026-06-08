@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { apiFetch } from '../utils/api';
 import { fetchDirectoratesCached, fetchPurposesCached } from '../utils/cache';
 import type { Outbuilding, Directorate, PurposeOption } from '../utils/types';
 import { getLegalStatusLabel, LegalStatus } from '../utils/types';

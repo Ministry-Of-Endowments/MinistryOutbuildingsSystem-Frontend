@@ -254,6 +254,9 @@ export default function MosquesPage() {
           street: editForm.street,
           notes: editForm.notes,
           administrationId: editForm.administrationId,
+          governorateId: editForm.governorateId ? parseInt(editForm.governorateId) : null,
+          departmentId: parseInt(editForm.departmentId),
+          sheikhdomId: parseInt(editForm.sheikhdomId),
         }),
       });
       const data = await res.json();

@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { apiFetch } from "../utils/api";
-import { fetchDirectoratesCached } from "../utils/cache";
 import AddressFields from "../components/AddressFields";
 
 export default function AddMosquePage() {
@@ -15,33 +14,6 @@ export default function AddMosquePage() {
   });
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
-
-  useEffect(() => {
-    fetchDirectorates();
-  }, []);
-
-  async function fetchDirectorates() {
-    try {
-      const data = await fetchDirectoratesCached();
-      setDirectorates(data);
-    } catch (err) {
-      console.error('Failed to fetch directorates:', err);
-    }
-  }
-
-  const selectedDirectorate = directorates.find(d => d.name === form.directorateName);
-  const availableAdministrations = selectedDirectorate?.administrations || [];
-
-  function handleDirectorateChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const directorate = e.target.value;
-    setForm({ ...form, directorateName: directorate, administrationId: "" });
-  }
-
-  function handleChange(
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) {
-    setForm({ ...form, [e.target.name]: e.target.value });
-  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

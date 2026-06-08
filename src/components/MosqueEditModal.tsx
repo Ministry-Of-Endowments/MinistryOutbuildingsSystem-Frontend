@@ -1,4 +1,5 @@
 import React from 'react';
+import AddressFields from './AddressFields';
 
 type Administration = {
   id: number;
@@ -11,32 +12,25 @@ type DirectorateWithAdmins = {
   administrations: Administration[];
 };
 
+type EditFormShape = {
+  name: string;
+  directorateName: string;
+  administrationId: number | null;
+  address: string;
+  street: string;
+  notes: string;
+  governorateId: string;
+  departmentId: string;
+  sheikhdomId: string;
+};
+
 type MosqueEditModalProps = {
-  form: {
-    name: string;
-    directorateName: string;
-    administrationId: number | null;
-    address: string;
-    street: string;
-    notes: string;
-    governorateId: string;
-    departmentId: string;
-    sheikhdomId: string;
-  };
+  form: EditFormShape;
   directorates: DirectorateWithAdmins[];
   loading: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (form: {
-    name: string;
-    address: string;
-    street: string;
-    notes: string;
-    governorateId: string;
-    departmentId: string;
-    sheikhdomId: string;
-  }) => void;
-  onChange: (form: { name: string; directorateName: string; administrationId: number | null; address: string; notes: string }) => void;
+  onChange: (form: EditFormShape) => void;
 };
 
 export default function MosqueEditModal({
@@ -121,10 +115,10 @@ export default function MosqueEditModal({
             departmentId={form.departmentId}
             sheikhdomId={form.sheikhdomId}
             street={form.street}
-            onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
-            onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
-            onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
-            onStreetChange={(street) => onChange({ ...form, street })}
+            onGovernorateChange={(id: number | string) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
+            onDepartmentChange={(id: number | string) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
+            onSheikhdomChange={(id: number | string) => onChange({ ...form, sheikhdomId: String(id) })}
+            onStreetChange={(street: string) => onChange({ ...form, street })}
             required={true}
           />
 
