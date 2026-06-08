@@ -153,6 +153,13 @@ export default function OutbuildingsPage() {
   }
 
   useEffect(() => {
+    if (selectedOutbuilding) {
+      const updated = outbuildings.find(o => o.id === selectedOutbuilding.id);
+      if (updated) setSelectedOutbuilding(updated);
+    }
+  }, [outbuildings]);
+
+  useEffect(() => {
     fetchOutbuildings();
     fetchDirectoratesCached().then(setDirectorates).catch(() => {});
     fetchPurposesCached()

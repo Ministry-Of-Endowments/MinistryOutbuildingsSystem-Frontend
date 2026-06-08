@@ -36,6 +36,15 @@ table {
   border-collapse: collapse;
 }
 
+/* Hide scrollbars globally across all browsers */
+* {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE/Edge */
+}
+*::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }

@@ -332,6 +332,13 @@ export default function MosquesPage() {
     }
   }
 
+  useEffect(() => {
+    if (selectedOutbuilding) {
+      const updated = outbuildings.find((o: Outbuilding) => o.id === selectedOutbuilding.id);
+      if (updated) setSelectedOutbuilding(updated);
+    }
+  }, [outbuildings]);
+
   function showOutbuildingsForMosque(mosque: Mosque) {
     setSelected(mosque);
     setShowModal(false);
@@ -510,9 +517,9 @@ export default function MosquesPage() {
     setSelected(mosque);
     setAddOutbuildingForm({
       description: '',
-      governorateId: '',
-      departmentId: '',
-      sheikhdomId: '',
+      governorateId: mosque.governorateId ? String(mosque.governorateId) : '',
+      departmentId: mosque.departmentId ? String(mosque.departmentId) : '',
+      sheikhdomId: mosque.sheikhdomId ? String(mosque.sheikhdomId) : '',
       street: '',
       space: '',
       notes: '',
