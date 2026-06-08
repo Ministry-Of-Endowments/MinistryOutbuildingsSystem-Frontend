@@ -1,24 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { apiFetch } from "../utils/api";
 import { fetchDirectoratesCached } from "../utils/cache";
 import AddressFields from "../components/AddressFields";
 
-type Administration = {
-  id: number;
-  name: string;
-};
-
-type Directorate = {
-  id: number;
-  name: string;
-  administrations: Administration[];
-};
-
 export default function AddMosquePage() {
   const [form, setForm] = useState({
     name: "",
-    directorateName: "",
-    administrationId: "",
     governorateId: "",
     departmentId: "",
     sheikhdomId: "",
@@ -26,7 +13,6 @@ export default function AddMosquePage() {
     address: "",
     notes: "",
   });
-  const [directorates, setDirectorates] = useState<Directorate[]>([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -64,14 +50,12 @@ export default function AddMosquePage() {
     try {
       const payload = {
         name: form.name,
-        administrationId: parseInt(form.administrationId),
         governorateId: parseInt(form.governorateId),
         departmentId: parseInt(form.departmentId),
         sheikhdomId: parseInt(form.sheikhdomId),
         street: form.street,
         address: form.address,
         notes: form.notes,
-        Directorate: form.directorateName,
       };
       
       const res = await apiFetch("/Mosques", {
@@ -122,47 +106,10 @@ export default function AddMosquePage() {
             type="text"
             name="name"
             value={form.name}
-            onChange={handleChange}
+            onChange={(e) => setForm({ ...form, name: e.target.value })}
             required
             className="w-full border rounded px-3 py-2"
           />
-        </div>
-
-        <div>
-          <label className="block mb-1 font-semibold">المديرية</label>
-          <select
-            name="directorateName"
-            value={form.directorateName}
-            onChange={handleDirectorateChange}
-            required
-            className="w-full border rounded px-3 py-2"
-          >
-            <option value="">اختر المديرية</option>
-            {directorates.map((dir) => (
-              <option key={dir.id} value={dir.name}>
-                {dir.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className={`block mb-1 font-semibold ${!form.directorateName ? 'text-gray-400' : ''}`}>الإدارة</label>
-          <select
-            name="administrationId"
-            value={form.administrationId}
-            onChange={handleChange}
-            required
-            disabled={!form.directorateName}
-            className={`w-full border rounded px-3 py-2 ${!form.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
-          >
-            <option value="">اختر الإدارة</option>
-            {availableAdministrations.map((admin) => (
-              <option key={admin.id} value={admin.id}>
-                {admin.name}
-              </option>
-            ))}
-          </select>
         </div>
 
         <AddressFields
@@ -183,7 +130,7 @@ export default function AddMosquePage() {
             type="text"
             name="address"
             value={form.address}
-            onChange={handleChange}
+            onChange={(e) => setForm({ ...form, address: e.target.value })}
             required
             className="w-full border rounded px-3 py-2"
           />
@@ -194,7 +141,7 @@ export default function AddMosquePage() {
           <textarea
             name="notes"
             value={form.notes}
-            onChange={handleChange}
+            onChange={(e) => setForm({ ...form, notes: e.target.value })}
             rows={4}
             className="w-full border rounded px-3 py-2"
           />

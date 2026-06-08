@@ -17,12 +17,25 @@ type MosqueEditModalProps = {
     directorateName: string;
     administrationId: number | null;
     address: string;
+    street: string;
     notes: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
   };
   directorates: DirectorateWithAdmins[];
   loading: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
+  onChange: (form: {
+    name: string;
+    address: string;
+    street: string;
+    notes: string;
+    governorateId: string;
+    departmentId: string;
+    sheikhdomId: string;
+  }) => void;
   onChange: (form: { name: string; directorateName: string; administrationId: number | null; address: string; notes: string }) => void;
 };
 
@@ -102,6 +115,18 @@ export default function MosqueEditModal({
               className="w-full border rounded px-3 py-2"
             />
           </div>
+
+          <AddressFields
+            governorateId={form.governorateId}
+            departmentId={form.departmentId}
+            sheikhdomId={form.sheikhdomId}
+            street={form.street}
+            onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
+            onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
+            onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
+            onStreetChange={(street) => onChange({ ...form, street })}
+            required={true}
+          />
 
           <div>
             <label className="block mb-1 font-semibold">الملاحظات</label>

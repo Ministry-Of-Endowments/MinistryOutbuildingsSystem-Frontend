@@ -40,7 +40,31 @@ export default function MosqueDetailsModal({
                 <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">العنوان</td>
                 <td className="px-4 py-3 text-gray-900">{mosque.address || '-'}</td>
               </tr>
-              {mosque.notes && (
+              {mosque.governorateName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المحافظة</td>
+                <td className="p-3 border border-gray-300">{mosque.governorateName}</td>
+              </tr>
+            )}
+            {mosque.departmentName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">القسم</td>
+                <td className="p-3 border border-gray-300">{mosque.departmentName}</td>
+              </tr>
+            )}
+            {mosque.sheikhdomName && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشياخة</td>
+                <td className="p-3 border border-gray-300">{mosque.sheikhdomName}</td>
+              </tr>
+            )}
+            {mosque.street && (
+              <tr>
+                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشارع</td>
+                <td className="p-3 border border-gray-300">{mosque.street}</td>
+              </tr>
+            )}
+            {mosque.notes && (
                 <tr>
                   <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">ملاحظات</td>
                   <td className="px-4 py-3 text-gray-900">{mosque.notes}</td>

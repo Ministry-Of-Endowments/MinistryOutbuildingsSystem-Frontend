@@ -104,11 +104,18 @@ export interface Mosque {
   id: number;
   name: string;
   address: string;
+  street?: string;
   notes: string;
   administrationId: number;
   administrationName: string;
   directorateId: number;
   directorateName: string;
+  governorateId: number;
+  governorateName?: string;
+  departmentId: number;
+  departmentName?: string;
+  sheikhdomId: number;
+  sheikhdomName?: string;
 }
 
 export interface Outbuilding {

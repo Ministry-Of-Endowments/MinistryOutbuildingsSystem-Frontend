@@ -13,6 +13,7 @@ interface AddressFieldsProps {
   onStreetChange: (street: string) => void;
   required?: boolean;
   disabled?: boolean;
+  governorateDisabled?: boolean;
 }
 
 export default function AddressFields({
@@ -26,6 +27,7 @@ export default function AddressFields({
   onStreetChange,
   required = true,
   disabled = false,
+  governorateDisabled = false,
 }: AddressFieldsProps) {
   const [governorates, setGovernorates] = useState<Governorate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,7 +108,7 @@ export default function AddressFields({
           onChange={handleGovernorateChange}
           className="w-full p-2 border rounded cursor-pointer"
           required={required}
-          disabled={disabled}
+          disabled={disabled || governorateDisabled}
         >
           <option value="">-- اختر المحافظة --</option>
           {governorates.map((gov) => (

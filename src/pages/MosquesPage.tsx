@@ -35,7 +35,11 @@ export default function MosquesPage() {
     directorateName: '',
     administrationId: null as number | null,
     address: '',
+    street: '',
     notes: '',
+    governorateId: '',
+    departmentId: '',
+    sheikhdomId: '',
   });
   const [editLoading, setEditLoading] = useState(false);
 
@@ -225,7 +229,11 @@ export default function MosquesPage() {
       directorateName: mosque.directorateName,
       administrationId: mosque.administrationId,
       address: mosque.address,
+      street: mosque.street || '',
       notes: mosque.notes || '',
+      governorateId: mosque.governorateId?.toString() || '',
+      departmentId: mosque.departmentId?.toString() || '',
+      sheikhdomId: mosque.sheikhdomId?.toString() || '',
     });
     setShowModal(false);
     setShowEditModal(true);
@@ -243,6 +251,7 @@ export default function MosquesPage() {
           name: editForm.name,
           directorate: editForm.directorateName,
           address: editForm.address,
+          street: editForm.street,
           notes: editForm.notes,
           administrationId: editForm.administrationId,
         }),
