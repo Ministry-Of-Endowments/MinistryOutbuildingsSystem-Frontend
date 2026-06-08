@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
 import { fetchDirectoratesCached, fetchPurposesCached } from '../utils/cache';
-import type { OutbuildingWithMosque, Directorate, PurposeOption } from '../utils/types';
+import type { OutbuildingWithMosque, Directorate, PurposeOption, Mosque } from '../utils/types';
 import { getLegalStatusLabel, LegalStatus } from '../utils/types';
 import { useToast } from '../components/Toast';
 import ConfirmModal from '../components/ConfirmModal';
@@ -73,32 +73,78 @@ export default function OutbuildingsPage() {
     setConfirmState({ message, onConfirm: action });
   }
 
+  function filterMosques(mosques: Mosque[], form: typeof filterForm): Mosque[] {
+    let filtered = mosques;
+    if (form.directorateName) {
+      filtered = filtered.filter(m => m.directorateName === form.directorateName);
+    }
+    if (form.administrationName) {
+      filtered = filtered.filter(m => m.administrationName === form.administrationName);
+    }
+    if (form.mosqueName.trim()) {
+      const term = form.mosqueName.trim();
+      filtered = filtered.filter(m => m.name.includes(term));
+    }
+    return filtered;
+  }
+
+  function buildOutbuildingQuery(form: typeof filterForm): string {
+    const params = new URLSearchParams();
+    if (form.status !== null && form.status !== undefined) params.append('status', form.status.toString());
+    if (form.purpose !== null && form.purpose !== undefined) params.append('purpose', form.purpose.toString());
+    if (form.customPurpose) params.append('customPurpose', form.customPurpose);
+    if (form.legalStatus !== null && form.legalStatus !== undefined) params.append('legalStatus', form.legalStatus.toString());
+    if (form.minSize) params.append('minSpace', form.minSize);
+    if (form.maxSize) params.append('maxSpace', form.maxSize);
+    if (form.hasElectricityMeter !== null && form.hasElectricityMeter !== undefined) {
+      params.append('hasElectricityMeter', form.hasElectricityMeter.toString());
+    }
+    if (form.hasWaterMeter !== null && form.hasWaterMeter !== undefined) {
+      params.append('hasWaterMeter', form.hasWaterMeter.toString());
+    }
+    const queryString = params.toString();
+    return queryString ? `?${queryString}` : '';
+  }
+
   async function fetchOutbuildings(form = filterForm) {
     setLoading(true);
     try {
-      let url = '/Outbuildings/All';
-      const params = new URLSearchParams();
-      if (form.directorateName) params.append('directorateName', form.directorateName);
-      if (form.administrationName) params.append('administrationName', form.administrationName);
-      if (form.mosqueName) params.append('mosqueName', form.mosqueName);
-      if (form.status !== null && form.status !== undefined) params.append('status', form.status.toString());
-      if (form.purpose !== null && form.purpose !== undefined) params.append('purpose', form.purpose.toString());
-      if (form.customPurpose) params.append('customPurpose', form.customPurpose);
-      if (form.legalStatus !== null && form.legalStatus !== undefined) params.append('legalStatus', form.legalStatus.toString());
-      if (form.minSize) params.append('minSpace', form.minSize);
-      if (form.maxSize) params.append('maxSpace', form.maxSize);
-      if (form.hasElectricityMeter !== null && form.hasElectricityMeter !== undefined) params.append('hasElectricityMeter', form.hasElectricityMeter.toString());
-      if (form.hasWaterMeter !== null && form.hasWaterMeter !== undefined) params.append('hasWaterMeter', form.hasWaterMeter.toString());
-      const queryString = params.toString();
-      if (queryString) url += `?${queryString}`;
-      const res = await apiFetch(url);
-      const data = await res.json();
-      if (data.status === 'success' && data.data) {
-        const apiOutbuildings = Array.isArray(data.data) ? data.data : [data.data];
-        setOutbuildings(apiOutbuildings.filter((item: OutbuildingWithMosque | null) => item != null));
-      } else {
+      const mosquesRes = await apiFetch('/Mosques');
+      const mosquesData = await mosquesRes.json();
+      if (mosquesData.status !== 'success' || !mosquesData.data) {
         setOutbuildings([]);
+        return;
       }
+
+      const mosques = filterMosques(mosquesData.data as Mosque[], form);
+      const query = buildOutbuildingQuery(form);
+
+      const batches = await Promise.all(
+        mosques.map(async (mosque) => {
+          try {
+            const res = await apiFetch(`/Outbuildings/${mosque.id}${query}`);
+            const data = await res.json();
+            if (data.status !== 'success' || !data.data) return [];
+            const items = Array.isArray(data.data) ? data.data : [data.data];
+            return items
+              .filter((item: OutbuildingWithMosque | null) => item != null)
+              .map((item: OutbuildingWithMosque) => ({
+                ...item,
+                mosqueId: mosque.id,
+                mosqueName: item.mosqueName ?? mosque.name,
+                mosqueAddress: item.mosqueAddress ?? mosque.address,
+                administrationId: item.administrationId ?? mosque.administrationId,
+                administrationName: item.administrationName ?? mosque.administrationName,
+                directorateId: item.directorateId ?? mosque.directorateId,
+                directorateName: item.directorateName ?? mosque.directorateName,
+              }));
+          } catch {
+            return [];
+          }
+        })
+      );
+
+      setOutbuildings(batches.flat());
     } catch {
       setOutbuildings([]);
     } finally {
