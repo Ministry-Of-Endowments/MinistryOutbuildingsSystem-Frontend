@@ -17,134 +17,140 @@ export default function OutbuildingDetailsModal({
   onAddContract,
 }: OutbuildingDetailsModalProps) {
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded shadow max-w-4xl w-full p-6 max-h-[90vh] overflow-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold">تفاصيل الملحق</h3>
-          <button className="text-gray-600" onClick={onClose}>✖</button>
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-auto">
+        <div className="flex justify-between items-center mb-5">
+          <h3 className="text-xl font-bold text-gray-900">تفاصيل الملحق</h3>
+          <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
         </div>
 
-        <table className="w-full text-right mb-6 border-collapse border border-gray-300">
-          <tbody>
-            {'mosqueName' in outbuilding && outbuilding.mosqueName && (
-              <>
+        <div className="rounded-lg overflow-hidden border border-gray-100 mb-6">
+          <table className="w-full text-right">
+            <tbody className="divide-y divide-gray-100">
+              {'mosqueName' in outbuilding && outbuilding.mosqueName && (
+                <>
+                  <tr>
+                    <td className="px-4 py-3 bg-gray-50 font-semibold w-1/3 text-gray-600">اسم المسجد</td>
+                    <td className="px-4 py-3 text-gray-900">{outbuilding.mosqueName || '-'}</td>
+                  </tr>
+                  {outbuilding.directorateName && (
+                    <tr>
+                      <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">المديرية</td>
+                      <td className="px-4 py-3 text-gray-900">{outbuilding.directorateName}</td>
+                    </tr>
+                  )}
+                  {outbuilding.administrationName && (
+                    <tr>
+                      <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الإدارة</td>
+                      <td className="px-4 py-3 text-gray-900">{outbuilding.administrationName}</td>
+                    </tr>
+                  )}
+                </>
+              )}
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الوصف</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.description || '-'}</td>
+              </tr>
+              {outbuilding.governorateName && (
                 <tr>
-                  <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">اسم المسجد</td>
-                  <td className="p-3 border border-gray-300">{outbuilding.mosqueName || '-'}</td>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">المحافظة</td>
+                  <td className="px-4 py-3 text-gray-900">{outbuilding.governorateName}</td>
                 </tr>
-                {outbuilding.directorateName && (
-                  <tr>
-                    <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">المديرية</td>
-                    <td className="p-3 border border-gray-300">{outbuilding.directorateName || '-'}</td>
-                  </tr>
-                )}
-                {outbuilding.administrationName && (
-                  <tr>
-                    <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الإدارة</td>
-                    <td className="p-3 border border-gray-300">{outbuilding.administrationName || '-'}</td>
-                  </tr>
-                )}
-              </>
-            )}
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold w-1/3 border border-gray-300">الوصف</td>
-              <td className="p-3 border border-gray-300">{outbuilding.description || '-'}</td>
-            </tr>
-            {outbuilding.governorateName && (
+              )}
+              {outbuilding.departmentName && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">القسم</td>
+                  <td className="px-4 py-3 text-gray-900">{outbuilding.departmentName}</td>
+                </tr>
+              )}
+              {outbuilding.sheikhdomName && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الشياخة</td>
+                  <td className="px-4 py-3 text-gray-900">{outbuilding.sheikhdomName}</td>
+                </tr>
+              )}
+              {outbuilding.street && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الشارع</td>
+                  <td className="px-4 py-3 text-gray-900">{outbuilding.street}</td>
+                </tr>
+              )}
               <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المحافظة</td>
-                <td className="p-3 border border-gray-300">{outbuilding.governorateName}</td>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">النشاط</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.purposeText || '-'}</td>
               </tr>
-            )}
-            {outbuilding.departmentName && (
               <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">القسم</td>
-                <td className="p-3 border border-gray-300">{outbuilding.departmentName}</td>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الحالة القانونية</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.legalStatusText || '-'}</td>
               </tr>
-            )}
-            {outbuilding.sheikhdomName && (
               <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشياخة</td>
-                <td className="p-3 border border-gray-300">{outbuilding.sheikhdomName}</td>
-              </tr>
-            )}
-            {outbuilding.street && (
-              <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الشارع</td>
-                <td className="p-3 border border-gray-300">{outbuilding.street}</td>
-              </tr>
-            )}
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">النشاط</td>
-              <td className="p-3 border border-gray-300">{outbuilding.purposeText || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الحالة القانونية</td>
-              <td className="p-3 border border-gray-300">{outbuilding.legalStatusText || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الحالة</td>
-              <td className="p-3 border border-gray-300">{outbuilding.status ? 'مستغل' : 'غير مستغل'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">اسم المنتفع</td>
-              <td className="p-3 border border-gray-300">{outbuilding.tenantName || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">الرقم القومي</td>
-              <td className="p-3 border border-gray-300">{outbuilding.tenantNationalId || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المساحة</td>
-              <td className="p-3 border border-gray-300">{outbuilding.space || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">قيمة حق الانتفاع</td>
-              <td className="p-3 border border-gray-300">{outbuilding.price || '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ بدء العقد</td>
-              <td className="p-3 border border-gray-300">{outbuilding.startDate ? new Date(outbuilding.startDate).toLocaleDateString('ar-EG') : '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ انتهاء العقد</td>
-              <td className="p-3 border border-gray-300">{outbuilding.endDate ? new Date(outbuilding.endDate).toLocaleDateString('ar-EG') : '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">تاريخ قبول اللجنة</td>
-              <td className="p-3 border border-gray-300">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">عداد كهرباء</td>
-              <td className="p-3 border border-gray-300">{outbuilding.hasElectricityMeter ? 'نعم' : 'لا'}</td>
-            </tr>
-            <tr>
-              <td className="p-3 bg-gray-50 font-semibold border border-gray-300">عداد مياه</td>
-              <td className="p-3 border border-gray-300">{outbuilding.hasWaterMeter ? 'نعم' : 'لا'}</td>
-            </tr>
-            {outbuilding.notes && (
-              <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">ملاحظات</td>
-                <td className="p-3 border border-gray-300">{outbuilding.notes}</td>
-              </tr>
-            )}
-            {outbuilding.contractUrl && (
-              <tr>
-                <td className="p-3 bg-gray-50 font-semibold border border-gray-300">العقد</td>
-                <td className="p-3 border border-gray-300">
-                  <a href={getBackendUrl(outbuilding.contractUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
-                    فتح العقد
-                  </a>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الحالة</td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${outbuilding.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {outbuilding.status ? 'مستغل' : 'غير مستغل'}
+                  </span>
                 </td>
               </tr>
-            )}
-          </tbody>
-        </table>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">اسم المنتفع</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.tenantName || '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الرقم القومي</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.tenantNationalId || '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">المساحة</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.space || '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">قيمة حق الانتفاع</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.price || '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">تاريخ بدء العقد</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.startDate ? new Date(outbuilding.startDate).toLocaleDateString('ar-EG') : '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">تاريخ انتهاء العقد</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.endDate ? new Date(outbuilding.endDate).toLocaleDateString('ar-EG') : '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">تاريخ قبول اللجنة</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.acceptanceDate ? new Date(outbuilding.acceptanceDate).toLocaleDateString('ar-EG') : '-'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">عداد كهرباء</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.hasElectricityMeter ? 'نعم' : 'لا'}</td>
+              </tr>
+              <tr>
+                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">عداد مياه</td>
+                <td className="px-4 py-3 text-gray-900">{outbuilding.hasWaterMeter ? 'نعم' : 'لا'}</td>
+              </tr>
+              {outbuilding.notes && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">ملاحظات</td>
+                  <td className="px-4 py-3 text-gray-900">{outbuilding.notes}</td>
+                </tr>
+              )}
+              {outbuilding.contractUrl && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">العقد</td>
+                  <td className="px-4 py-3">
+                    <a href={getBackendUrl(outbuilding.contractUrl)} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                      فتح العقد
+                    </a>
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+        </div>
 
-        <div className="mt-6 flex justify-end gap-2">
+        <div className="flex justify-end gap-2">
           {!outbuilding.status && (
             <button
-              className="px-4 py-2 rounded text-white"
+              className="px-4 py-2 rounded-lg text-white transition-colors active:scale-95 duration-150"
               style={{ backgroundColor: 'var(--primary)' }}
               onClick={onAddContract}
             >
@@ -154,7 +160,7 @@ export default function OutbuildingDetailsModal({
           <button
             type="button"
             onClick={onEdit}
-            className="px-4 py-2 text-white rounded"
+            className="px-4 py-2 text-white rounded-lg transition-colors active:scale-95 duration-150"
             style={{ backgroundColor: 'var(--primary)' }}
           >
             تعديل
@@ -162,7 +168,7 @@ export default function OutbuildingDetailsModal({
           <button
             type="button"
             onClick={onDelete}
-            className="px-4 py-2 bg-red-500 text-white rounded"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors active:scale-95 duration-150"
           >
             حذف
           </button>

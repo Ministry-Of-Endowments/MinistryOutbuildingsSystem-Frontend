@@ -23,6 +23,8 @@ type ContractModalProps = {
   }) => void;
 };
 
+import { useToast } from './Toast';
+
 export default function ContractModal({
   outbuildingName,
   form,
@@ -31,12 +33,14 @@ export default function ContractModal({
   onSubmit,
   onChange,
 }: ContractModalProps) {
+  const { toast } = useToast();
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded shadow max-w-2xl w-full p-6">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">إضافة عقد - {outbuildingName}</h3>
-          <button className="text-gray-600" onClick={onClose}>✖</button>
+          <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
@@ -150,12 +154,12 @@ export default function ContractModal({
                 if (file) {
                   const maxSize = 10 * 1024 * 1024;
                   if (file.size > maxSize) {
-                    alert('حجم الملف يجب أن يكون أقل من 10 ميجابايت');
+                    toast('حجم الملف يجب أن يكون أقل من 10 ميجابايت', 'error');
                     return;
                   }
                   const validTypes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
                   if (!validTypes.includes(file.type)) {
-                    alert('نوع الملف غير مدعوم. يرجى اختيار ملف PDF أو صورة');
+                    toast('نوع الملف غير مدعوم. يرجى اختيار ملف PDF أو صورة', 'error');
                     return;
                   }
                 }
@@ -163,7 +167,7 @@ export default function ContractModal({
               }}
               className="w-full border rounded px-3 py-2"
             />
-            <p className="text-xs text-gray-500 mt-1">يُسمح بملفات PDF والصور (JPG, PNG) بحد أقصى 10 ميجابايت</p>
+            <p className="text-sm text-gray-500 mt-1">يُسمح بملفات PDF والصور (JPG, PNG) بحد أقصى 10 ميجابايت</p>
           </div>
 
           <div className="flex justify-end gap-2 mt-6">

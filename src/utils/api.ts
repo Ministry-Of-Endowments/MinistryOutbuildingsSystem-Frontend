@@ -3,10 +3,6 @@ export type ApiOptions = RequestInit & { attachJson?: boolean };
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5101/api';
 const BACKEND_BASE_URL = API_BASE_URL.replace(/\/api$/, '');
 
-console.log('Environment variables:', import.meta.env);
-console.log('API_BASE_URL:', API_BASE_URL);
-console.log('BACKEND_BASE_URL:', BACKEND_BASE_URL);
-
 export function getAuthToken(): string | null {
   try {
     const raw = localStorage.getItem('auth');
@@ -38,9 +34,6 @@ export async function apiFetch(input: string, init?: ApiOptions): Promise<Respon
   };
 
   const url = input.startsWith('/') ? `${API_BASE_URL}${input}` : input;
-  
-  console.log('API call - input:', input, 'final URL:', url);
-
   return fetch(url, finalInit);
 }
 

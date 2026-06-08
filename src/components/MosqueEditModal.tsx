@@ -1,32 +1,48 @@
 import React from 'react';
-import { DIRECTORATES } from '../utils/constants';
+
+type Administration = {
+  id: number;
+  name: string;
+};
+
+type DirectorateWithAdmins = {
+  id: number;
+  name: string;
+  administrations: Administration[];
+};
 
 type MosqueEditModalProps = {
   form: {
     name: string;
-    directorate: string;
+    directorateName: string;
+    administrationId: number | null;
     address: string;
     notes: string;
   };
+  directorates: DirectorateWithAdmins[];
   loading: boolean;
   onClose: () => void;
   onSubmit: (e: React.FormEvent) => void;
-  onChange: (form: { name: string; directorate: string; address: string; notes: string }) => void;
+  onChange: (form: { name: string; directorateName: string; administrationId: number | null; address: string; notes: string }) => void;
 };
 
 export default function MosqueEditModal({
   form,
+  directorates,
   loading,
   onClose,
   onSubmit,
   onChange,
 }: MosqueEditModalProps) {
+  const selectedDirectorate = directorates.find(d => d.name === form.directorateName);
+  const availableAdministrations = selectedDirectorate?.administrations || [];
+
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded shadow max-w-2xl w-full p-6">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">تعديل المسجد</h3>
-          <button className="text-gray-600" onClick={onClose}>✖</button>
+          <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
         </div>
 
         <form onSubmit={onSubmit} className="space-y-4">
@@ -44,15 +60,33 @@ export default function MosqueEditModal({
           <div>
             <label className="block mb-1 font-semibold">المديرية</label>
             <select
-              value={form.directorate}
-              onChange={(e) => onChange({ ...form, directorate: e.target.value })}
+              value={form.directorateName}
+              onChange={(e) => onChange({ ...form, directorateName: e.target.value, administrationId: null })}
               required
               className="w-full border rounded px-3 py-2"
             >
               <option value="">اختر المديرية</option>
-              {DIRECTORATES.map((dir) => (
-                <option key={dir} value={dir}>
-                  {dir}
+              {directorates.map((dir) => (
+                <option key={dir.id} value={dir.name}>
+                  {dir.name}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className={`block mb-1 font-semibold ${!form.directorateName ? 'text-gray-400' : ''}`}>الإدارة</label>
+            <select
+              value={form.administrationId ?? ''}
+              onChange={(e) => onChange({ ...form, administrationId: e.target.value ? parseInt(e.target.value) : null })}
+              required
+              disabled={!form.directorateName}
+              className={`w-full border rounded px-3 py-2 ${!form.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+            >
+              <option value="">اختر الإدارة</option>
+              {availableAdministrations.map((admin) => (
+                <option key={admin.id} value={admin.id}>
+                  {admin.name}
                 </option>
               ))}
             </select>
@@ -70,7 +104,7 @@ export default function MosqueEditModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">الملاحظات (اختياري)</label>
+            <label className="block mb-1 font-semibold">الملاحظات</label>
             <textarea
               value={form.notes}
               onChange={(e) => onChange({ ...form, notes: e.target.value })}

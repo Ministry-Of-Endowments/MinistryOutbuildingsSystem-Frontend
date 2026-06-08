@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { apiFetch } from '../utils/api';
+import { fetchDirectoratesCached, fetchPurposesCached } from '../utils/cache';
 import type { OutbuildingWithMosque, Directorate, PurposeOption } from '../utils/types';
 import { getLegalStatusLabel, LegalStatus } from '../utils/types';
+import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
 import OutbuildingEditModal from '../components/OutbuildingEditModal';
 import ContractModal from '../components/ContractModal';
 
 export default function OutbuildingsPage() {
+  const { toast } = useToast();
   const [outbuildings, setOutbuildings] = useState<OutbuildingWithMosque[]>([]);
   const [loading, setLoading] = useState(false);
   const [showFilters, setShowFilters] = useState(false);
@@ -62,39 +66,40 @@ export default function OutbuildingsPage() {
   });
   const [contractLoading, setContractLoading] = useState(false);
   const [outbuildingEditLoading, setOutbuildingEditLoading] = useState(false);
+  const [filterErrors, setFilterErrors] = useState<Record<string, string>>({});
+  const [confirmState, setConfirmState] = useState<{ message: string; onConfirm: () => void } | null>(null);
 
-  async function fetchOutbuildings() {
+  function promptConfirm(message: string, action: () => void) {
+    setConfirmState({ message, onConfirm: action });
+  }
+
+  async function fetchOutbuildings(form = filterForm) {
     setLoading(true);
     try {
-      let url = '/Outbuildings/all';
-      
+      let url = '/Outbuildings/All';
       const params = new URLSearchParams();
-      if (filterForm.directorateName) params.append('directorateName', filterForm.directorateName);
-      if (filterForm.administrationName) params.append('administrationName', filterForm.administrationName);
-      if (filterForm.mosqueName) params.append('mosqueName', filterForm.mosqueName);
-      if (filterForm.status !== null && filterForm.status !== undefined) params.append('status', filterForm.status.toString());
-      if (filterForm.purpose !== null && filterForm.purpose !== undefined) params.append('purpose', filterForm.purpose.toString());
-      if (filterForm.customPurpose) params.append('customPurpose', filterForm.customPurpose);
-      if (filterForm.legalStatus !== null && filterForm.legalStatus !== undefined) params.append('legalStatus', filterForm.legalStatus.toString());
-      if (filterForm.minSize) params.append('minSpace', filterForm.minSize);
-      if (filterForm.maxSize) params.append('maxSpace', filterForm.maxSize);
-      if (filterForm.hasElectricityMeter !== null && filterForm.hasElectricityMeter !== undefined) params.append('hasElectricityMeter', filterForm.hasElectricityMeter.toString());
-      if (filterForm.hasWaterMeter !== null && filterForm.hasWaterMeter !== undefined) params.append('hasWaterMeter', filterForm.hasWaterMeter.toString());
-      
+      if (form.directorateName) params.append('directorateName', form.directorateName);
+      if (form.administrationName) params.append('administrationName', form.administrationName);
+      if (form.mosqueName) params.append('mosqueName', form.mosqueName);
+      if (form.status !== null && form.status !== undefined) params.append('status', form.status.toString());
+      if (form.purpose !== null && form.purpose !== undefined) params.append('purpose', form.purpose.toString());
+      if (form.customPurpose) params.append('customPurpose', form.customPurpose);
+      if (form.legalStatus !== null && form.legalStatus !== undefined) params.append('legalStatus', form.legalStatus.toString());
+      if (form.minSize) params.append('minSpace', form.minSize);
+      if (form.maxSize) params.append('maxSpace', form.maxSize);
+      if (form.hasElectricityMeter !== null && form.hasElectricityMeter !== undefined) params.append('hasElectricityMeter', form.hasElectricityMeter.toString());
+      if (form.hasWaterMeter !== null && form.hasWaterMeter !== undefined) params.append('hasWaterMeter', form.hasWaterMeter.toString());
       const queryString = params.toString();
       if (queryString) url += `?${queryString}`;
-      
       const res = await apiFetch(url);
       const data = await res.json();
-      
       if (data.status === 'success' && data.data) {
         const apiOutbuildings = Array.isArray(data.data) ? data.data : [data.data];
         setOutbuildings(apiOutbuildings.filter((item: OutbuildingWithMosque | null) => item != null));
       } else {
         setOutbuildings([]);
       }
-    } catch (e) {
-      console.error('Fetch error:', e);
+    } catch {
       setOutbuildings([]);
     } finally {
       setLoading(false);
@@ -102,54 +107,21 @@ export default function OutbuildingsPage() {
   }
 
   useEffect(() => {
-    async function fetchDirectorates() {
-      try {
-        const res = await apiFetch('/Outbuildings/Directorates/WithAdministrations');
-        const data = await res.json();
-        if (data.status === 'success') {
-          const sorted = (data.data || []).map((dir: Directorate) => ({
-            ...dir,
-            administrations: [...dir.administrations].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
-          })).sort((a: Directorate, b: Directorate) => a.name.localeCompare(b.name, 'ar'));
-          setDirectorates(sorted);
-        }
-      } catch (e) {
-        console.error('Failed to fetch directorates:', e);
-      }
-    }
-
-    async function fetchPurposes() {
-      try {
-        const res = await apiFetch('/Outbuildings/purposes');
-        const data = await res.json();
-        if (data.status === 'success') {
-          const sorted = [...(data.data || [])].sort((a: PurposeOption, b: PurposeOption) => 
-            a.label.localeCompare(b.label, 'ar')
-          );
-          setPurposes(sorted);
-        }
-      } catch (e) {
-        console.error('Failed to fetch purposes:', e);
-      }
-    }
-
-    fetchDirectorates();
-    fetchPurposes();
+    fetchOutbuildings();
+    fetchDirectoratesCached().then(setDirectorates).catch(() => {});
+    fetchPurposesCached()
+      .then(data => setPurposes([...data].sort((a, b) => a.label.localeCompare(b.label, 'ar'))))
+      .catch(() => {});
   }, []);
-
-  const [filterErrors, setFilterErrors] = useState<Record<string, string>>({});
 
   function validateFilters(): boolean {
     const errors: Record<string, string> = {};
-
     if (filterForm.minSize && (isNaN(parseFloat(filterForm.minSize)) || parseFloat(filterForm.minSize) < 0)) {
       errors.minSize = 'يجب أن تكون المساحة الدنيا رقم موجب';
     }
-
     if (filterForm.maxSize && (isNaN(parseFloat(filterForm.maxSize)) || parseFloat(filterForm.maxSize) < 0)) {
       errors.maxSize = 'يجب أن تكون المساحة القصوى رقم موجب';
     }
-
     if (filterForm.minSize && filterForm.maxSize) {
       const min = parseFloat(filterForm.minSize);
       const max = parseFloat(filterForm.maxSize);
@@ -158,23 +130,18 @@ export default function OutbuildingsPage() {
         errors.maxSize = 'المساحة القصوى يجب أن تكون أكبر من المساحة الدنيا';
       }
     }
-
     if (filterForm.mosqueName && filterForm.mosqueName.length > 200) {
       errors.mosqueName = 'اسم المسجد يجب أن يكون أقل من 200 حرف';
     }
-
     if (filterForm.customPurpose && filterForm.customPurpose.length > 100) {
       errors.customPurpose = 'النشاط المخصص يجب أن يكون أقل من 100 حرف';
     }
-
     setFilterErrors(errors);
     return Object.keys(errors).length === 0;
   }
 
   function handleApplyFilters() {
-    if (!validateFilters()) {
-      return;
-    }
+    if (!validateFilters()) return;
     fetchOutbuildings();
   }
 
@@ -194,28 +161,11 @@ export default function OutbuildingsPage() {
     };
     setFilterForm(resetForm);
     setFilterErrors({});
-    
-    const url = '/Outbuildings/all';
-    const res = apiFetch(url);
-    res.then(response => response.json()).then(data => {
-      if (data.status === 'success' && data.data) {
-        const apiOutbuildings = Array.isArray(data.data) ? data.data : [data.data];
-        setOutbuildings(apiOutbuildings.filter((item: OutbuildingWithMosque | null) => item != null));
-      } else {
-        setOutbuildings([]);
-      }
-    }).catch(e => {
-      console.error('Fetch error:', e);
-      setOutbuildings([]);
-    });
+    fetchOutbuildings(resetForm);
   }
 
   function handleDirectorateChange(directorateName: string) {
-    setFilterForm({
-      ...filterForm,
-      directorateName,
-      administrationName: '',
-    });
+    setFilterForm({ ...filterForm, directorateName, administrationName: '' });
   }
 
   const selectedDirectorate = directorates.find(d => d.name === filterForm.directorateName);
@@ -228,15 +178,7 @@ export default function OutbuildingsPage() {
 
   function openContractModal(item: OutbuildingWithMosque) {
     setSelectedOutbuilding(item);
-    setContractForm({
-      startDate: '',
-      endDate: '',
-      tenantName: '',
-      tenantNationalId: '',
-      price: '',
-      committeeApprovalDate: '',
-      contract: null,
-    });
+    setContractForm({ startDate: '', endDate: '', tenantName: '', tenantNationalId: '', price: '', committeeApprovalDate: '', contract: null });
     setShowContractModal(true);
   }
 
@@ -271,7 +213,6 @@ export default function OutbuildingsPage() {
     e.preventDefault();
     if (!selectedOutbuilding) return;
     setOutbuildingEditLoading(true);
-
     try {
       const payload = {
         description: outbuildingEditForm.description,
@@ -295,49 +236,44 @@ export default function OutbuildingsPage() {
         hasElectricityMeter: outbuildingEditForm.hasElectricityMeter,
         hasWaterMeter: outbuildingEditForm.hasWaterMeter,
       };
-
       const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
       const data = await res.json();
-      
       if (data.status === 'success') {
-        alert('تم تحديث الملحق بنجاح');
+        toast('تم تحديث الملحق بنجاح');
         setShowOutbuildingEditModal(false);
         await fetchOutbuildings();
       } else {
-        alert(data.message || 'حدث خطأ أثناء التحديث');
+        toast(data.message || 'حدث خطأ أثناء التحديث', 'error');
       }
-    } catch (err) {
-      console.error('Update error:', err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setOutbuildingEditLoading(false);
     }
   }
 
-  async function handleOutbuildingDelete() {
+  function handleOutbuildingDelete() {
     if (!selectedOutbuilding) return;
-    if (!confirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.description}"؟`)) return;
-
-    const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('تم حذف الملحق بنجاح');
-      setShowOutbuildingDetailsModal(false);
-      await fetchOutbuildings();
-    } else {
-      const err = await res.json();
-      alert(err.message || 'حدث خطأ');
-    }
+    promptConfirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.description}"؟`, async () => {
+      const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast('تم حذف الملحق بنجاح');
+        setShowOutbuildingDetailsModal(false);
+        await fetchOutbuildings();
+      } else {
+        const err = await res.json();
+        toast(err.message || 'حدث خطأ', 'error');
+      }
+    });
   }
 
   async function handleExport() {
     try {
       const params = new URLSearchParams();
-      
       if (filterForm.directorateName) params.append('DirectorateName', filterForm.directorateName);
       if (filterForm.administrationName) params.append('AdministrationName', filterForm.administrationName);
       if (filterForm.mosqueName) params.append('MosqueName', filterForm.mosqueName);
@@ -349,16 +285,10 @@ export default function OutbuildingsPage() {
       if (filterForm.legalStatus !== null) params.append('LegalStatus', String(filterForm.legalStatus));
       if (filterForm.hasElectricityMeter !== null) params.append('HasElectricityMeter', String(filterForm.hasElectricityMeter));
       if (filterForm.hasWaterMeter !== null) params.append('HasWaterMeter', String(filterForm.hasWaterMeter));
-
       const queryString = params.toString();
       const url = `/Outbuildings/export-mosques-outbuildings${queryString ? `?${queryString}` : ''}`;
-      
       const res = await apiFetch(url);
-      
-      if (!res.ok) {
-        throw new Error('فشل في تصدير البيانات');
-      }
-
+      if (!res.ok) throw new Error();
       const blob = await res.blob();
       const downloadUrl = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
@@ -368,65 +298,43 @@ export default function OutbuildingsPage() {
       link.click();
       document.body.removeChild(link);
       window.URL.revokeObjectURL(downloadUrl);
-    } catch (error) {
-      console.error('Error exporting:', error);
-      alert('حدث خطأ أثناء التصدير');
+    } catch {
+      toast('حدث خطأ أثناء التصدير', 'error');
     }
   }
 
   async function handleContract(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedOutbuilding) return;
-
     setContractLoading(true);
     try {
       const formData = new FormData();
-      if (contractForm.contract) {
-        formData.append('contract', contractForm.contract);
-      }
-
-      const queryParams = new URLSearchParams({
-        startDate: contractForm.startDate,
-        endDate: contractForm.endDate,
-        tenantName: contractForm.tenantName,
-        tenantNationalId: contractForm.tenantNationalId,
-        price: contractForm.price,
-      });
-
-      if (contractForm.committeeApprovalDate) {
-        queryParams.append('committeeApprovalDate', contractForm.committeeApprovalDate);
-      }
-
-      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?${queryParams}`, {
-        method: 'PUT',
-        body: formData,
-      });
-
+      formData.append('startDate', contractForm.startDate);
+      formData.append('endDate', contractForm.endDate);
+      formData.append('tenantName', contractForm.tenantName);
+      formData.append('tenantNationalId', contractForm.tenantNationalId);
+      formData.append('price', contractForm.price);
+      if (contractForm.committeeApprovalDate) formData.append('committeeApprovalDate', contractForm.committeeApprovalDate);
+      if (contractForm.contract) formData.append('contract', contractForm.contract);
+      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}`, { method: 'PUT', body: formData });
       const data = await res.json();
       if (data.status === 'success') {
-        alert('تم إضافة العقد بنجاح');
+        toast('تم إضافة العقد بنجاح');
         setShowContractModal(false);
         await fetchOutbuildings();
       } else {
-        alert(data.message || 'حدث خطأ أثناء إضافة العقد');
+        toast(data.message || 'حدث خطأ أثناء إضافة العقد', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setContractLoading(false);
     }
   }
 
-  useEffect(() => { 
-    fetchOutbuildings(); 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
-      <div className="mb-4 p-4 bg-gray-50 border rounded shrink-0">
+      <div className="mb-4 p-4 bg-gray-50/60 rounded-lg shadow-sm shrink-0">
         <div className="flex justify-between items-center mb-2">
           <div>
             <h2 className="text-xl font-bold mb-2">جميع الملحقات</h2>
@@ -434,34 +342,22 @@ export default function OutbuildingsPage() {
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded hover:bg-white transition-colors text-sm"
           >
-            {showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}
+            <span>{showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}</span>
+            <span className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}>▾</span>
           </button>
         </div>
 
         {showFilters && (
-          <div 
-            className="mt-3 p-4 border rounded bg-white"
-            onKeyDown={e => {
-              if (e.key === 'Escape') {
-                handleResetFilters();
-              }
-            }}
-            tabIndex={0}
-          >
+          <div className="mt-3 p-4 border rounded bg-white">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block mb-1 font-semibold text-sm">المديرية</label>
                 <select
                   value={filterForm.directorateName}
                   onChange={e => handleDirectorateChange(e.target.value)}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -476,12 +372,7 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.administrationName}
                   onChange={e => setFilterForm({ ...filterForm, administrationName: e.target.value })}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter' && filterForm.directorateName) {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && filterForm.directorateName && (e.preventDefault(), handleApplyFilters())}
                   disabled={!filterForm.directorateName}
                   className={`w-full border rounded px-3 py-2 ${!filterForm.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
                 >
@@ -497,28 +388,13 @@ export default function OutbuildingsPage() {
                 <input
                   type="text"
                   value={filterForm.mosqueName}
-                  onChange={e => {
-                    const value = e.target.value;
-                    if (value.length <= 200) {
-                      setFilterForm({ ...filterForm, mosqueName: value });
-                      if (filterErrors.mosqueName) {
-                        setFilterErrors({ ...filterErrors, mosqueName: '' });
-                      }
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onChange={e => { if (e.target.value.length <= 200) setFilterForm({ ...filterForm, mosqueName: e.target.value }); }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   maxLength={200}
                   placeholder="ابحث عن مسجد..."
                   className={`w-full border rounded px-3 py-2 ${filterErrors.mosqueName ? 'border-red-500' : ''}`}
                 />
-                {filterErrors.mosqueName && (
-                  <p className="text-red-500 text-xs mt-1">{filterErrors.mosqueName}</p>
-                )}
+                {filterErrors.mosqueName && <p className="text-red-500 text-sm mt-1">{filterErrors.mosqueName}</p>}
               </div>
 
               <div>
@@ -526,12 +402,7 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.status === null ? '' : filterForm.status.toString()}
                   onChange={e => setFilterForm({ ...filterForm, status: e.target.value === '' ? null : e.target.value === 'true' })}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -546,29 +417,21 @@ export default function OutbuildingsPage() {
                   value={filterForm.customPurpose || (filterForm.purpose ?? '')}
                   onChange={e => {
                     const selectedValue = e.target.value;
-                    const selectedPurpose = purposes.find(p => 
+                    const selectedPurpose = purposes.find(p =>
                       p.isCustom ? p.label === selectedValue : String(p.value) === selectedValue
                     );
-                    
                     if (selectedPurpose?.isCustom) {
                       setFilterForm({ ...filterForm, purpose: null, customPurpose: selectedPurpose.label });
                     } else {
                       setFilterForm({ ...filterForm, purpose: selectedValue ? parseInt(selectedValue) : null, customPurpose: '' });
                     }
                   }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
                   {purposes.map((p, idx) => (
-                    <option key={idx} value={p.isCustom ? p.label : p.value}>
-                      {p.label}
-                    </option>
+                    <option key={idx} value={p.isCustom ? p.label : p.value}>{p.label}</option>
                   ))}
                 </select>
               </div>
@@ -578,12 +441,7 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.legalStatus ?? ''}
                   onChange={e => setFilterForm({ ...filterForm, legalStatus: e.target.value ? parseInt(e.target.value) : null })}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -596,57 +454,27 @@ export default function OutbuildingsPage() {
               <div>
                 <label className="block mb-1 font-semibold text-sm">المساحة (من)</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="number" step="0.01" min="0"
                   value={filterForm.minSize}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setFilterForm({ ...filterForm, minSize: value });
-                    if (filterErrors.minSize) {
-                      setFilterErrors({ ...filterErrors, minSize: '' });
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onChange={e => { setFilterForm({ ...filterForm, minSize: e.target.value }); if (filterErrors.minSize) setFilterErrors({ ...filterErrors, minSize: '' }); }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   placeholder="الحد الأدنى"
                   className={`w-full border rounded px-3 py-2 ${filterErrors.minSize ? 'border-red-500' : ''}`}
                 />
-                {filterErrors.minSize && (
-                  <p className="text-red-500 text-xs mt-1">{filterErrors.minSize}</p>
-                )}
+                {filterErrors.minSize && <p className="text-red-500 text-sm mt-1">{filterErrors.minSize}</p>}
               </div>
 
               <div>
                 <label className="block mb-1 font-semibold text-sm">المساحة (إلى)</label>
                 <input
-                  type="number"
-                  step="0.01"
-                  min="0"
+                  type="number" step="0.01" min="0"
                   value={filterForm.maxSize}
-                  onChange={e => {
-                    const value = e.target.value;
-                    setFilterForm({ ...filterForm, maxSize: value });
-                    if (filterErrors.maxSize) {
-                      setFilterErrors({ ...filterErrors, maxSize: '' });
-                    }
-                  }}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onChange={e => { setFilterForm({ ...filterForm, maxSize: e.target.value }); if (filterErrors.maxSize) setFilterErrors({ ...filterErrors, maxSize: '' }); }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   placeholder="الحد الأقصى"
                   className={`w-full border rounded px-3 py-2 ${filterErrors.maxSize ? 'border-red-500' : ''}`}
                 />
-                {filterErrors.maxSize && (
-                  <p className="text-red-500 text-xs mt-1">{filterErrors.maxSize}</p>
-                )}
+                {filterErrors.maxSize && <p className="text-red-500 text-sm mt-1">{filterErrors.maxSize}</p>}
               </div>
 
               <div>
@@ -654,12 +482,7 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.hasElectricityMeter === null ? '' : String(filterForm.hasElectricityMeter)}
                   onChange={e => setFilterForm({ ...filterForm, hasElectricityMeter: e.target.value === '' ? null : e.target.value === 'true' })}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -673,12 +496,7 @@ export default function OutbuildingsPage() {
                 <select
                   value={filterForm.hasWaterMeter === null ? '' : String(filterForm.hasWaterMeter)}
                   onChange={e => setFilterForm({ ...filterForm, hasWaterMeter: e.target.value === '' ? null : e.target.value === 'true' })}
-                  onKeyDown={e => {
-                    if (e.key === 'Enter') {
-                      e.preventDefault();
-                      handleApplyFilters();
-                    }
-                  }}
+                  onKeyDown={e => e.key === 'Enter' && (e.preventDefault(), handleApplyFilters())}
                   className="w-full border rounded px-3 py-2"
                 >
                   <option value="">الكل</option>
@@ -696,16 +514,10 @@ export default function OutbuildingsPage() {
               >
                 تطبيق الفلاتر
               </button>
-              <button
-                onClick={handleResetFilters}
-                className="px-4 py-2 border rounded hover:bg-gray-50"
-              >
+              <button onClick={handleResetFilters} className="px-4 py-2 border rounded hover:bg-gray-50">
                 إعادة تعيين
               </button>
-              <button
-                onClick={handleExport}
-                className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700"
-              >
+              <button onClick={handleExport} className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700">
                 تصدير إلى Excel
               </button>
             </div>
@@ -713,46 +525,48 @@ export default function OutbuildingsPage() {
         )}
       </div>
 
-      <div className="flex-1 overflow-auto bg-white border rounded min-h-0">
+      <div className="flex-1 overflow-auto bg-white rounded-lg shadow-sm min-h-0">
         <table className="w-full text-right">
           <thead>
-            <tr className="bg-gray-50">
-              <th className="p-3 border">#</th>
-              <th className="p-3 border">اسم الملحق</th>
-              <th className="p-3 border">اسم المسجد</th>
-              <th className="p-3 border">المديرية</th>
-              <th className="p-3 border">الإدارة</th>
-              <th className="p-3 border">الغرض</th>
-              <th className="p-3 border">الحالة</th>
-              <th className="p-3 border">المساحة</th>
-              <th className="p-3 border w-48">الإجراءات</th>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">#</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">اسم الملحق</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">اسم المسجد</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">المديرية</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">الإدارة</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">الغرض</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">الحالة</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600">المساحة</th>
+              <th className="px-4 py-3 text-sm font-semibold text-gray-600 w-32">الإجراءات</th>
             </tr>
           </thead>
-          <tbody>
+          <tbody className="divide-y divide-gray-100">
             {loading ? (
-              <tr><td colSpan={9} className="p-6 text-center">جارٍ التحميل...</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">جارٍ التحميل...</td></tr>
             ) : outbuildings.length === 0 ? (
-              <tr><td colSpan={9} className="p-6 text-center">لا توجد بيانات لعرضها</td></tr>
+              <tr><td colSpan={9} className="px-4 py-8 text-center text-gray-400">لا توجد بيانات لعرضها</td></tr>
             ) : outbuildings.map((outbuilding, idx) => (
-              <tr key={outbuilding.id} className="hover:bg-gray-50">
-                <td className="p-3 border">{idx + 1}</td>
-                <td className="p-3 border">{outbuilding.description || '-'}</td>
-                <td className="p-3 border">{outbuilding.mosqueName || '-'}</td>
-                <td className="p-3 border">{outbuilding.directorateName || '-'}</td>
-                <td className="p-3 border">{outbuilding.administrationName || '-'}</td>
-                <td className="p-3 border">{outbuilding.purposeText || '-'}</td>
-                <td className="p-3 border">{outbuilding.status ? 'مستغل' : 'غير مستغل'}</td>
-                <td className="p-3 border">{outbuilding.space || '-'}</td>
-                <td className="p-2 border w-64">
-                  <div className="flex gap-2">
-                    <button
-                      className="px-3 py-1 rounded text-white text-sm"
-                      style={{ backgroundColor: 'var(--primary)' }}
-                      onClick={() => showOutbuildingDetails(outbuilding)}
-                    >
-                      عرض
-                    </button>
-                  </div>
+              <tr key={outbuilding.id} className="hover:bg-gray-50/70 transition-colors duration-150">
+                <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+                <td className="px-4 py-3 font-medium text-gray-900">{outbuilding.description || '-'}</td>
+                <td className="px-4 py-3 text-gray-600">{outbuilding.mosqueName || '-'}</td>
+                <td className="px-4 py-3 text-gray-600">{outbuilding.directorateName || '-'}</td>
+                <td className="px-4 py-3 text-gray-600">{outbuilding.administrationName || '-'}</td>
+                <td className="px-4 py-3 text-gray-600">{outbuilding.purposeText || '-'}</td>
+                <td className="px-4 py-3">
+                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${outbuilding.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {outbuilding.status ? 'مستغل' : 'غير مستغل'}
+                  </span>
+                </td>
+                <td className="px-4 py-3 text-gray-600">{outbuilding.space || '-'}</td>
+                <td className="px-4 py-3">
+                  <button
+                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
+                    style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
+                    onClick={() => showOutbuildingDetails(outbuilding)}
+                  >
+                    عرض
+                  </button>
                 </td>
               </tr>
             ))}
@@ -791,7 +605,14 @@ export default function OutbuildingsPage() {
           onChange={setContractForm}
         />
       )}
+
+      {confirmState && (
+        <ConfirmModal
+          message={confirmState.message}
+          onConfirm={() => { setConfirmState(null); confirmState.onConfirm(); }}
+          onCancel={() => setConfirmState(null)}
+        />
+      )}
     </div>
   );
 }
-

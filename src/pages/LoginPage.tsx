@@ -127,7 +127,7 @@ export default function LoginPage(props: { onLoggedIn: (auth: AuthInfo) => void 
               onChange={(e) => setEmail(e.target.value)}
             />
             {fieldErrors.Email && (
-              <div className="text-xs text-red-600 mt-1">{fieldErrors.Email[0]}</div>
+              <div className="text-sm text-red-600 mt-1">{fieldErrors.Email[0]}</div>
             )}
           </div>
 
@@ -141,7 +141,7 @@ export default function LoginPage(props: { onLoggedIn: (auth: AuthInfo) => void 
               onChange={(e) => setPassword(e.target.value)}
             />
             {fieldErrors.Password && (
-              <div className="text-xs text-red-600 mt-1">{fieldErrors.Password[0]}</div>
+              <div className="text-sm text-red-600 mt-1">{fieldErrors.Password[0]}</div>
             )}
           </div>
 

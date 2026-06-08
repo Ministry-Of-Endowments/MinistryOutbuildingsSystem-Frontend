@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { apiFetch } from "../utils/api";
+import { fetchDirectoratesCached } from "../utils/cache";
 import AddressFields from "../components/AddressFields";
 
 type Administration = {
@@ -35,15 +36,8 @@ export default function AddMosquePage() {
 
   async function fetchDirectorates() {
     try {
-      const res = await apiFetch('/Outbuildings/Directorates/WithAdministrations');
-      const data = await res.json();
-      if (data.status === 'success') {
-        const sorted = (data.data || []).map((dir: Directorate) => ({
-          ...dir,
-          administrations: [...dir.administrations].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
-        })).sort((a: Directorate, b: Directorate) => a.name.localeCompare(b.name, 'ar'));
-        setDirectorates(sorted);
-      }
+      const data = await fetchDirectoratesCached();
+      setDirectorates(data);
     } catch (err) {
       console.error('Failed to fetch directorates:', err);
     }

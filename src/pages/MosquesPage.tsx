@@ -1,6 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { apiFetch } from '../utils/api';
+import { fetchDirectoratesCached } from '../utils/cache';
 import type { Mosque, Outbuilding } from '../utils/types';
+import { useToast } from '../components/Toast';
+import ConfirmModal from '../components/ConfirmModal';
 import MosquesTable from '../components/MosquesTable';
 import MosqueDetailsModal from '../components/MosqueDetailsModal';
 import MosqueEditModal from '../components/MosqueEditModal';
@@ -10,7 +13,11 @@ import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
 import OutbuildingEditModal from '../components/OutbuildingEditModal';
 import ContractModal from '../components/ContractModal';
 
+type Administration = { id: number; name: string };
+type DirectorateWithAdmins = { id: number; name: string; administrations: Administration[] };
+
 export default function MosquesPage() {
+  const { toast } = useToast();
   const [mosques, setMosques] = useState<Mosque[]>([]);
   const [allMosques, setAllMosques] = useState<Mosque[]>([]);
   const [loading, setLoading] = useState(false);
@@ -22,9 +29,11 @@ export default function MosquesPage() {
   const [selectedAdministration, setSelectedAdministration] = useState<string>('');
   const [selectedDirectorateId, setSelectedDirectorateId] = useState<number | null>(null);
   const [selectedAdministrationId, setSelectedAdministrationId] = useState<number | null>(null);
+  const [directorates, setDirectorates] = useState<DirectorateWithAdmins[]>([]);
   const [editForm, setEditForm] = useState({
     name: '',
-    directorate: '',
+    directorateName: '',
+    administrationId: null as number | null,
     address: '',
     notes: '',
   });
@@ -84,26 +93,29 @@ export default function MosquesPage() {
     legalStatus: null as number | null,
     hasElectricityMeter: false,
     hasWaterMeter: false,
-    status: false,
-    startDate: '',
-    endDate: '',
-    acceptanceDate: '',
-    price: '',
-    tenantName: '',
-    tenantNationalId: '',
-    committeeApprovalDate: '',
-    contract: null as File | null,
   });
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<any>({});
+  const [confirmState, setConfirmState] = useState<{ message: string; onConfirm: () => void } | null>(null);
+
+  function promptConfirm(message: string, action: () => void) {
+    setConfirmState({ message, onConfirm: action });
+  }
+
+  async function fetchDirectorates() {
+    try {
+      const data = await fetchDirectoratesCached();
+      setDirectorates(data);
+    } catch (e) {
+      console.error('Failed to fetch directorates:', e);
+    }
+  }
 
   async function fetchMosques() {
     setLoading(true);
     try {
-      const url = '/Mosques';
-      const res = await apiFetch(url);
+      const res = await apiFetch('/Mosques');
       const data = await res.json();
-      
       if (data.status === 'success') {
         const fetchedMosques = data.data || [];
         setAllMosques(fetchedMosques);
@@ -124,15 +136,8 @@ export default function MosquesPage() {
   function applyFilters(mosquesToFilter?: Mosque[]) {
     const dataToFilter = mosquesToFilter || allMosques;
     let filtered = [...dataToFilter];
-
-    if (selectedDirectorate) {
-      filtered = filtered.filter(m => m.directorateName === selectedDirectorate);
-    }
-
-    if (selectedAdministration) {
-      filtered = filtered.filter(m => m.administrationName === selectedAdministration);
-    }
-
+    if (selectedDirectorate) filtered = filtered.filter(m => m.directorateName === selectedDirectorate);
+    if (selectedAdministration) filtered = filtered.filter(m => m.administrationName === selectedAdministration);
     setMosques(filtered);
   }
 
@@ -140,7 +145,6 @@ export default function MosquesPage() {
     setSelectedDirectorate(directorate);
     setSelectedAdministration('');
     setSelectedAdministrationId(null);
-    
     if (directorate) {
       const mosque = allMosques.find(m => m.directorateName === directorate);
       setSelectedDirectorateId(mosque?.directorateId ?? null);
@@ -151,7 +155,6 @@ export default function MosquesPage() {
 
   function handleAdministrationChange(administration: string) {
     setSelectedAdministration(administration);
-    
     if (administration) {
       const mosque = allMosques.find(m => m.administrationName === administration);
       setSelectedAdministrationId(mosque?.administrationId ?? null);
@@ -169,31 +172,30 @@ export default function MosquesPage() {
     fetchMosques();
   }
 
-  useEffect(() => {
-    applyFilters();
-  }, [selectedDirectorate, selectedAdministration]);
+  useEffect(() => { applyFilters(); }, [selectedDirectorate, selectedAdministration]);
 
-  const uniqueDirectorates = Array.from(new Set(allMosques.map(m => m.directorateName))).sort();
-  const uniqueAdministrations = Array.from(
-    new Set(
-      allMosques
-        .filter(m => !selectedDirectorate || m.directorateName === selectedDirectorate)
-        .map(m => m.administrationName)
-    )
-  ).sort();
+  const uniqueDirectorates = useMemo(
+    () => Array.from(new Set(allMosques.map(m => m.directorateName))).sort(),
+    [allMosques]
+  );
+
+  const uniqueAdministrations = useMemo(
+    () => Array.from(
+      new Set(
+        allMosques
+          .filter(m => !selectedDirectorate || m.directorateName === selectedDirectorate)
+          .map(m => m.administrationName)
+      )
+    ).sort(),
+    [allMosques, selectedDirectorate]
+  );
 
   async function handleSearch() {
-    if (!searchKey.trim()) {
-      applyFilters();
-      return;
-    }
-
+    if (!searchKey.trim()) { applyFilters(); return; }
     setLoading(true);
     try {
-      const url = `/Mosques/Search/${encodeURIComponent(searchKey)}`;
-      const res = await apiFetch(url);
+      const res = await apiFetch(`/Mosques/Search/${encodeURIComponent(searchKey)}`);
       const data = await res.json();
-      
       if (data.status === 'success') {
         const searchResults = data.data || [];
         setAllMosques(searchResults);
@@ -220,7 +222,8 @@ export default function MosquesPage() {
     setSelected(mosque);
     setEditForm({
       name: mosque.name,
-      directorate: mosque.directorateName,
+      directorateName: mosque.directorateName,
+      administrationId: mosque.administrationId,
       address: mosque.address,
       notes: mosque.notes || '',
     });
@@ -230,70 +233,63 @@ export default function MosquesPage() {
 
   async function handleEdit(e: React.FormEvent) {
     e.preventDefault();
-    if (!selected) return;
-
+    if (!selected || !editForm.administrationId) return;
     setEditLoading(true);
     try {
-      console.log('Sending update request:', editForm);
       const res = await apiFetch(`/Mosques/${selected.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: editForm.name,
-          directorate: editForm.directorate,
+          directorate: editForm.directorateName,
           address: editForm.address,
           notes: editForm.notes,
+          administrationId: editForm.administrationId,
         }),
       });
       const data = await res.json();
-      console.log('Update response:', data);
-      
       if (data.status === 'success') {
-        alert('تم تعديل المسجد بنجاح');
+        toast('تم تعديل المسجد بنجاح');
         setShowEditModal(false);
         fetchMosques();
       } else {
-        console.error('Update failed:', data);
-        alert(data.message || 'حدث خطأ أثناء التعديل');
+        toast(data.message || 'حدث خطأ أثناء التعديل', 'error');
       }
-    } catch (err) {
-      console.error('Update error:', err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setEditLoading(false);
     }
   }
 
-  async function handleDelete() {
+  function handleDelete() {
     if (!selected) return;
-    if (!confirm(`هل أنت متأكد من حذف المسجد "${selected.name}"؟`)) return;
-
-    try {
-      const res = await apiFetch(`/Mosques/${selected.id}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      
-      if (data.status === 'success') {
-        alert('تم حذف المسجد بنجاح');
-        setShowModal(false);
-        fetchMosques();
-      } else {
-        alert(data.message || 'حدث خطأ أثناء الحذف');
+    promptConfirm(`هل أنت متأكد من حذف المسجد "${selected.name}"؟`, async () => {
+      try {
+        const res = await apiFetch(`/Mosques/${selected.id}`, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.status === 'success') {
+          toast('تم حذف المسجد بنجاح');
+          setShowModal(false);
+          fetchMosques();
+        } else {
+          toast(data.message || 'حدث خطأ أثناء الحذف', 'error');
+        }
+      } catch {
+        toast('فشل الاتصال بالسيرفر', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      alert('فشل الاتصال بالسيرفر');
-    }
+    });
   }
 
-  useEffect(() => { fetchMosques(); }, []);
+  useEffect(() => {
+    fetchMosques();
+    fetchDirectorates();
+  }, []);
 
   async function fetchOutbuildings(mosqueId: number, filter?: any) {
     setOutbuildingsLoading(true);
     try {
       let url = `/Outbuildings/${mosqueId}`;
-      
       if (filter && Object.keys(filter).length > 0) {
         const params = new URLSearchParams();
         if (filter.administrationName) params.append('administrationName', filter.administrationName);
@@ -301,29 +297,23 @@ export default function MosquesPage() {
         if (filter.mosqueName) params.append('mosqueName', filter.mosqueName);
         if (filter.status !== undefined && filter.status !== null) params.append('status', filter.status.toString());
         if (filter.purpose !== undefined && filter.purpose !== null) params.append('purpose', filter.purpose.toString());
-        if (filter.customPurpose) params.append('customPurpose', filter.customPurpose);
         if (filter.legalStatus !== undefined && filter.legalStatus !== null) params.append('legalStatus', filter.legalStatus.toString());
         if (filter.minSize !== undefined && filter.minSize !== null) params.append('minSpace', filter.minSize.toString());
         if (filter.maxSize !== undefined && filter.maxSize !== null) params.append('maxSpace', filter.maxSize.toString());
         if (filter.hasElectricityMeter !== undefined && filter.hasElectricityMeter !== null) params.append('hasElectricityMeter', filter.hasElectricityMeter.toString());
         if (filter.hasWaterMeter !== undefined && filter.hasWaterMeter !== null) params.append('hasWaterMeter', filter.hasWaterMeter.toString());
-        
         const queryString = params.toString();
         if (queryString) url += `?${queryString}`;
       }
-      
       const res = await apiFetch(url);
       const data = await res.json();
-      
       if (data.status === 'success' && data.data) {
-        const outbuildingData = data.data;
-        const apiOutbuildings = Array.isArray(outbuildingData) ? outbuildingData : [outbuildingData];
-        setOutbuildings(apiOutbuildings.filter(item => item != null));
+        const apiOutbuildings = Array.isArray(data.data) ? data.data : [data.data];
+        setOutbuildings(apiOutbuildings.filter((item: any) => item != null));
       } else {
         setOutbuildings([]);
       }
-    } catch (e) {
-      console.error('Fetch error:', e);
+    } catch {
       setOutbuildings([]);
     } finally {
       setOutbuildingsLoading(false);
@@ -351,15 +341,7 @@ export default function MosquesPage() {
 
   function openContractModal(item: Outbuilding) {
     setSelectedOutbuilding(item);
-    setContractForm({
-      startDate: '',
-      endDate: '',
-      tenantName: '',
-      tenantNationalId: '',
-      price: '',
-      committeeApprovalDate: '',
-      contract: null,
-    });
+    setContractForm({ startDate: '', endDate: '', tenantName: '', tenantNationalId: '', price: '', committeeApprovalDate: '', contract: null });
     setShowContractModal(true);
   }
 
@@ -394,7 +376,6 @@ export default function MosquesPage() {
     e.preventDefault();
     if (!selectedOutbuilding) return;
     setOutbuildingEditLoading(true);
-
     try {
       const payload = {
         description: outbuildingEditForm.description,
@@ -418,66 +399,50 @@ export default function MosquesPage() {
         hasElectricityMeter: outbuildingEditForm.hasElectricityMeter,
         hasWaterMeter: outbuildingEditForm.hasWaterMeter,
       };
-
       const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
       });
-      
       const data = await res.json();
-      
       if (data.status === 'success') {
-        alert('تم تحديث الملحق بنجاح');
+        toast('تم تحديث الملحق بنجاح');
         setShowOutbuildingEditModal(false);
-        if (selected) {
-          await fetchOutbuildings(selected.id, currentFilter);
-        }
+        if (selected) await fetchOutbuildings(selected.id, currentFilter);
       } else {
-        alert(data.message || 'حدث خطأ أثناء التحديث');
+        toast(data.message || 'حدث خطأ أثناء التحديث', 'error');
       }
-    } catch (err) {
-      console.error('Update error:', err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setOutbuildingEditLoading(false);
     }
   }
 
-  async function handleOutbuildingDelete() {
+  function handleOutbuildingDelete() {
     if (!selectedOutbuilding || !selected) return;
-    if (!confirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.description}"؟`)) return;
-
-    const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
-    if (res.ok) {
-      alert('تم حذف الملحق بنجاح');
-      setShowOutbuildingDetailsModal(false);
-      await fetchOutbuildings(selected.id, currentFilter);
-    } else {
-      const err = await res.json();
-      alert(err.message || 'حدث خطأ');
-    }
+    promptConfirm(`هل أنت متأكد من حذف الملحق "${selectedOutbuilding.description}"؟`, async () => {
+      const res = await apiFetch(`/Outbuildings/${selectedOutbuilding.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast('تم حذف الملحق بنجاح');
+        setShowOutbuildingDetailsModal(false);
+        await fetchOutbuildings(selected.id, currentFilter);
+      } else {
+        const err = await res.json();
+        toast(err.message || 'حدث خطأ', 'error');
+      }
+    });
   }
 
   async function handleExportExcel() {
     try {
       let url = '/Outbuildings/export-mosques-outbuildings';
       const params = new URLSearchParams();
-      
-      if (selectedDirectorateId) {
-        params.append('directorateId', selectedDirectorateId.toString());
-      }
-      if (selectedAdministrationId) {
-        params.append('administrationId', selectedAdministrationId.toString());
-      }
-      
+      if (selectedDirectorateId) params.append('directorateId', selectedDirectorateId.toString());
+      if (selectedAdministrationId) params.append('administrationId', selectedAdministrationId.toString());
       const queryString = params.toString();
-      if (queryString) {
-        url += `?${queryString}`;
-      }
-      
+      if (queryString) url += `?${queryString}`;
       const res = await apiFetch(url);
-      
       if (res.ok) {
         const blob = await res.blob();
         const blobUrl = window.URL.createObjectURL(blob);
@@ -489,53 +454,41 @@ export default function MosquesPage() {
         window.URL.revokeObjectURL(blobUrl);
         document.body.removeChild(a);
       } else {
-        alert('فشل تصدير البيانات');
+        toast('فشل تصدير البيانات', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      alert('فشل تصدير البيانات');
+    } catch {
+      toast('فشل تصدير البيانات', 'error');
     }
   }
 
   async function handleContract(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedOutbuilding || !selected) return;
-
     setContractLoading(true);
     try {
       const formData = new FormData();
-      if (contractForm.contract) {
-        formData.append('contract', contractForm.contract);
-      }
+      formData.append('startDate', contractForm.startDate);
+      formData.append('endDate', contractForm.endDate);
+      formData.append('tenantName', contractForm.tenantName);
+      formData.append('tenantNationalId', contractForm.tenantNationalId);
+      formData.append('price', contractForm.price);
+      if (contractForm.committeeApprovalDate) formData.append('committeeApprovalDate', contractForm.committeeApprovalDate);
+      if (contractForm.contract) formData.append('contract', contractForm.contract);
 
-      const queryParams = new URLSearchParams({
-        startDate: contractForm.startDate,
-        endDate: contractForm.endDate,
-        tenantName: contractForm.tenantName,
-        tenantNationalId: contractForm.tenantNationalId,
-        price: contractForm.price,
-      });
-
-      if (contractForm.committeeApprovalDate) {
-        queryParams.append('committeeApprovalDate', contractForm.committeeApprovalDate);
-      }
-
-      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}?${queryParams}`, {
+      const res = await apiFetch(`/Outbuildings/Contract/${selectedOutbuilding.id}`, {
         method: 'PUT',
         body: formData,
       });
-
       const data = await res.json();
       if (data.status === 'success') {
-        alert('تم إضافة العقد بنجاح');
+        toast('تم إضافة العقد بنجاح');
         setShowContractModal(false);
         await fetchOutbuildings(selected.id, currentFilter);
       } else {
-        alert(data.message || 'حدث خطأ أثناء إضافة العقد');
+        toast(data.message || 'حدث خطأ أثناء إضافة العقد', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setContractLoading(false);
     }
@@ -556,15 +509,6 @@ export default function MosquesPage() {
       legalStatus: null,
       hasElectricityMeter: false,
       hasWaterMeter: false,
-      status: false,
-      startDate: '',
-      endDate: '',
-      acceptanceDate: '',
-      price: '',
-      tenantName: '',
-      tenantNationalId: '',
-      committeeApprovalDate: '',
-      contract: null,
     });
     setShowModal(false);
     setShowAddOutbuildingModal(true);
@@ -573,81 +517,45 @@ export default function MosquesPage() {
   async function handleAddOutbuilding(e: React.FormEvent) {
     e.preventDefault();
     if (!selected) return;
-
     setAddOutbuildingLoading(true);
     try {
-      const formData = new FormData();
-      formData.append('description', addOutbuildingForm.description);
-      formData.append('governorateId', addOutbuildingForm.governorateId);
-      formData.append('departmentId', addOutbuildingForm.departmentId);
-      formData.append('sheikhdomId', addOutbuildingForm.sheikhdomId);
-      formData.append('street', addOutbuildingForm.street);
-      formData.append('space', addOutbuildingForm.space);
-      formData.append('notes', addOutbuildingForm.notes || '');
-      formData.append('purpose', addOutbuildingForm.purpose.toString());
-      if (addOutbuildingForm.customPurpose) {
-        formData.append('customPurpose', addOutbuildingForm.customPurpose);
-      }
-      if (addOutbuildingForm.legalStatus !== null) {
-        formData.append('legalStatus', addOutbuildingForm.legalStatus.toString());
-      }
-      formData.append('hasElectricityMeter', addOutbuildingForm.hasElectricityMeter.toString());
-      formData.append('hasWaterMeter', addOutbuildingForm.hasWaterMeter.toString());
-      formData.append('status', addOutbuildingForm.status.toString());
-      
-      if (addOutbuildingForm.status) {
-        if (addOutbuildingForm.startDate) {
-          formData.append('startDate', addOutbuildingForm.startDate);
-        }
-        if (addOutbuildingForm.endDate) {
-          formData.append('endDate', addOutbuildingForm.endDate);
-        }
-        if (addOutbuildingForm.acceptanceDate) {
-          formData.append('acceptanceDate', addOutbuildingForm.acceptanceDate);
-        }
-        if (addOutbuildingForm.price) {
-          formData.append('price', addOutbuildingForm.price);
-        }
-        if (addOutbuildingForm.tenantName) {
-          formData.append('tenantName', addOutbuildingForm.tenantName);
-        }
-        if (addOutbuildingForm.tenantNationalId) {
-          formData.append('tenantNationalId', addOutbuildingForm.tenantNationalId);
-        }
-        if (addOutbuildingForm.committeeApprovalDate) {
-          formData.append('committeeApprovalDate', addOutbuildingForm.committeeApprovalDate);
-        }
-        if (addOutbuildingForm.contract) {
-          formData.append('contract', addOutbuildingForm.contract);
-        }
-      }
-      
+      const payload = {
+        description: addOutbuildingForm.description,
+        governorateId: parseInt(addOutbuildingForm.governorateId),
+        departmentId: parseInt(addOutbuildingForm.departmentId),
+        sheikhdomId: parseInt(addOutbuildingForm.sheikhdomId),
+        street: addOutbuildingForm.street,
+        space: parseFloat(addOutbuildingForm.space),
+        notes: addOutbuildingForm.notes || null,
+        purpose: addOutbuildingForm.purpose,
+        customPurpose: addOutbuildingForm.customPurpose || null,
+        legalStatus: addOutbuildingForm.legalStatus,
+        hasElectricityMeter: addOutbuildingForm.hasElectricityMeter,
+        hasWaterMeter: addOutbuildingForm.hasWaterMeter,
+      };
       const res = await apiFetch(`/Outbuildings/${selected.id}`, {
         method: 'POST',
-        body: formData,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
       });
       const data = await res.json();
-      
       if (data.status === 'success') {
-        alert('تم إضافة الملحق بنجاح');
+        toast('تم إضافة الملحق بنجاح');
         setShowAddOutbuildingModal(false);
         await fetchOutbuildings(selected.id, currentFilter);
       } else {
-        alert(data.message || 'حدث خطأ أثناء الإضافة');
+        toast(data.message || 'حدث خطأ أثناء الإضافة', 'error');
       }
-    } catch (err) {
-      console.error(err);
-      alert('فشل الاتصال بالسيرفر');
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
     } finally {
       setAddOutbuildingLoading(false);
     }
   }
 
-
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
-      {/* Filters Section */}
-      <div className="mb-4 p-4 bg-gray-50 border rounded shrink-0">
+      <div className="mb-4 p-4 bg-gray-50/60 rounded-lg shadow-sm shrink-0">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
           <div>
             <label className="block mb-1 font-semibold text-sm">المديرية</label>
@@ -695,30 +603,27 @@ export default function MosquesPage() {
           <div className="flex items-end gap-2">
             <button
               onClick={handleSearch}
-              className="px-4 py-2 rounded text-white flex-1"
+              className="px-4 py-2 rounded text-white"
               style={{ backgroundColor: 'var(--primary)' }}
             >
               بحث
             </button>
-            <button
-              onClick={handleResetFilters}
-              className="px-4 py-2 border rounded hover:bg-gray-50"
-            >
+            <button onClick={handleResetFilters} className="px-4 py-2 border rounded hover:bg-gray-50">
               إعادة تعيين
             </button>
             <button
               onClick={handleExportExcel}
               className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700"
             >
-              تصدير Excel
+              تصدير
             </button>
           </div>
         </div>
       </div>
 
-      <MosquesTable 
-        mosques={mosques} 
-        loading={loading} 
+      <MosquesTable
+        mosques={mosques}
+        loading={loading}
         onShowDetails={showDetails}
         onViewOutbuildings={showOutbuildingsForMosque}
       />
@@ -735,6 +640,7 @@ export default function MosquesPage() {
       {showEditModal && selected && (
         <MosqueEditModal
           form={editForm}
+          directorates={directorates}
           loading={editLoading}
           onClose={() => setShowEditModal(false)}
           onSubmit={handleEdit}
@@ -794,6 +700,14 @@ export default function MosquesPage() {
           onClose={() => setShowContractModal(false)}
           onSubmit={handleContract}
           onChange={setContractForm}
+        />
+      )}
+
+      {confirmState && (
+        <ConfirmModal
+          message={confirmState.message}
+          onConfirm={() => { setConfirmState(null); confirmState.onConfirm(); }}
+          onCancel={() => setConfirmState(null)}
         />
       )}
     </div>

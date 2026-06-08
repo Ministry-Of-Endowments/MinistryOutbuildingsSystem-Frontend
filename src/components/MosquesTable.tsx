@@ -9,43 +9,43 @@ type MosquesTableProps = {
 
 export default function MosquesTable({ mosques, loading, onShowDetails, onViewOutbuildings }: MosquesTableProps) {
   return (
-    <div className="flex-1 overflow-auto bg-white border rounded min-h-0">
+    <div className="flex-1 overflow-auto bg-white rounded-lg shadow-sm min-h-0">
       <table className="w-full text-right">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="p-3 border">#</th>
-            <th className="p-3 border">الاسم</th>
-            <th className="p-3 border">المديرية</th>
-            <th className="p-3 border">الإدارة</th>
-            <th className="p-3 border">العنوان</th>
-            <th className="p-3 border">ملاحظات</th>
-            <th className="p-3 border w-48">الإجراءات</th>
+          <tr className="bg-gray-50 border-b border-gray-200">
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">#</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">الاسم</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">المديرية</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">الإدارة</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">العنوان</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600">ملاحظات</th>
+            <th className="px-4 py-3 text-sm font-semibold text-gray-600 w-48">الإجراءات</th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y divide-gray-100">
           {loading ? (
-            <tr><td colSpan={7} className="p-6 text-center">جارٍ التحميل...</td></tr>
+            <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">جارٍ التحميل...</td></tr>
           ) : mosques.length === 0 ? (
-            <tr><td colSpan={7} className="p-6 text-center">لا توجد بيانات لعرضها</td></tr>
+            <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">لا توجد بيانات لعرضها</td></tr>
           ) : mosques.map((mosque, idx) => (
-            <tr key={mosque.id} className="hover:bg-gray-50">
-              <td className="p-3 border">{idx + 1}</td>
-              <td className="p-3 border">{mosque.name || '-'}</td>
-              <td className="p-3 border">{mosque.directorateName || '-'}</td>
-              <td className="p-3 border">{mosque.administrationName || '-'}</td>
-              <td className="p-3 border">{mosque.address || '-'}</td>
-              <td className="p-3 border">{mosque.notes || '-'}</td>
-              <td className="p-2 border w-64">
+            <tr key={mosque.id} className="hover:bg-gray-50/70 transition-colors duration-150">
+              <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
+              <td className="px-4 py-3 font-medium text-gray-900">{mosque.name || '-'}</td>
+              <td className="px-4 py-3 text-gray-600">{mosque.directorateName || '-'}</td>
+              <td className="px-4 py-3 text-gray-600">{mosque.administrationName || '-'}</td>
+              <td className="px-4 py-3 text-gray-600">{mosque.address || '-'}</td>
+              <td className="px-4 py-3 text-gray-500">{mosque.notes || '-'}</td>
+              <td className="px-4 py-3">
                 <div className="flex gap-2">
                   <button
-                    className="px-3 py-1 rounded"
+                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
                     style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
                     onClick={() => onShowDetails(mosque)}
                   >
                     عرض البيانات
                   </button>
                   <button
-                    className="px-3 py-1 rounded"
+                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
                     style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
                     onClick={() => onViewOutbuildings(mosque)}
                   >

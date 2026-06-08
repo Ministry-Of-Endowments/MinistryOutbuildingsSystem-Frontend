@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { apiFetch } from '../utils/api';
+import { fetchDirectoratesCached, fetchPurposesCached } from '../utils/cache';
 import type { Outbuilding, Directorate, PurposeOption } from '../utils/types';
 import { getLegalStatusLabel, LegalStatus } from '../utils/types';
 
@@ -52,41 +52,10 @@ export default function OutbuildingsListModal({
   });
 
   useEffect(() => {
-    // Fetch directorates with administrations
-    async function fetchDirectorates() {
-      try {
-        const res = await apiFetch('/Outbuildings/Directorates/WithAdministrations');
-        const data = await res.json();
-        if (data.status === 'success') {
-          const sorted = (data.data || []).map((dir: Directorate) => ({
-            ...dir,
-            administrations: [...dir.administrations].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
-          })).sort((a: Directorate, b: Directorate) => a.name.localeCompare(b.name, 'ar'));
-          setDirectorates(sorted);
-        }
-      } catch (e) {
-        console.error('Failed to fetch directorates:', e);
-      }
-    }
-
-    // Fetch purposes
-    async function fetchPurposes() {
-      try {
-        const res = await apiFetch('/Outbuildings/purposes');
-        const data = await res.json();
-        if (data.status === 'success') {
-          const sorted = [...(data.data || [])].sort((a: PurposeOption, b: PurposeOption) => 
-            a.label.localeCompare(b.label, 'ar')
-          );
-          setPurposes(sorted);
-        }
-      } catch (e) {
-        console.error('Failed to fetch purposes:', e);
-      }
-    }
-
-    fetchDirectorates();
-    fetchPurposes();
+    fetchDirectoratesCached().then(setDirectorates).catch(() => {});
+    fetchPurposesCached()
+      .then(data => setPurposes([...data].sort((a: PurposeOption, b: PurposeOption) => a.label.localeCompare(b.label, 'ar'))))
+      .catch(() => {});
   }, []);
 
   const handleApplyFilters = () => {
@@ -175,20 +144,21 @@ export default function OutbuildingsListModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/30 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded shadow w-[98vw] max-w-[1800px] h-[90vh] p-6 flex flex-col">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
+      <div className="modal-container bg-white rounded-xl shadow-xl w-[98vw] max-w-[1800px] h-[90vh] p-6 flex flex-col">
         <div className="flex justify-between items-center mb-4 shrink-0">
           <h3 className="text-lg font-semibold">ملحقات مسجد: {mosqueName}</h3>
-          <button className="text-gray-600" onClick={onClose}>✖</button>
+          <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
         </div>
 
         {/* Filter Section */}
         <div className="mb-4 shrink-0">
           <button
             onClick={() => setShowFilters(!showFilters)}
-            className="px-4 py-2 border rounded hover:bg-gray-50"
+            className="flex items-center gap-2 px-4 py-2 border rounded hover:bg-white transition-colors text-sm"
           >
-            {showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}
+            <span>{showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}</span>
+            <span className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}>▾</span>
           </button>
           
           {showFilters && (
@@ -359,74 +329,71 @@ export default function OutbuildingsListModal({
           )}
         </div>
 
-        <div className="flex-1 overflow-auto bg-white border rounded min-h-0">
-          <table className="w-full text-right text-sm">
+        <div className="flex-1 overflow-auto bg-white rounded-lg shadow-sm min-h-0">
+          <table className="w-full text-right">
             <thead>
-              <tr className="bg-gray-50">
-                <th className="p-2 border whitespace-nowrap">#</th>
-                <th className="p-2 border whitespace-nowrap">الوصف</th>
-                <th className="p-2 border whitespace-nowrap">النشاط</th>
-                <th className="p-2 border whitespace-nowrap">الحالة القانونية</th>
-                <th className="p-2 border whitespace-nowrap">الحالة</th>
-                <th className="p-2 border whitespace-nowrap">اسم المنتفع</th>
-                <th className="p-2 border whitespace-nowrap">الرقم القومي</th>
-                <th className="p-2 border whitespace-nowrap">المساحة</th>
-                <th className="p-2 border whitespace-nowrap">قيمة حق الانتفاع</th>
-                <th className="p-2 border whitespace-nowrap">عداد كهرباء</th>
-                <th className="p-2 border whitespace-nowrap">عداد مياه</th>
-                <th className="p-2 border whitespace-nowrap">تاريخ بدء العقد</th>
-                <th className="p-2 border whitespace-nowrap">تاريخ انتهاء العقد</th>
-                <th className="p-2 border whitespace-nowrap">الإجراءات</th>
+              <tr className="bg-gray-50 border-b border-gray-200">
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">#</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">الوصف</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">النشاط</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">الحالة القانونية</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">الحالة</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">اسم المنتفع</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">الرقم القومي</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">المساحة</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">قيمة حق الانتفاع</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">عداد كهرباء</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">عداد مياه</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">بدء العقد</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">انتهاء العقد</th>
+                <th className="px-3 py-3 text-sm font-semibold text-gray-600 whitespace-nowrap">الإجراءات</th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="divide-y divide-gray-100">
               {loading ? (
-                <tr><td colSpan={14} className="p-6 text-center">جارٍ التحميل...</td></tr>
+                <tr><td colSpan={14} className="px-4 py-8 text-center text-gray-400">جارٍ التحميل...</td></tr>
               ) : outbuildings.length === 0 ? (
-                <tr><td colSpan={14} className="p-6 text-center text-gray-500">لا توجد ملحقات</td></tr>
+                <tr><td colSpan={14} className="px-4 py-8 text-center text-gray-400">لا توجد ملحقات</td></tr>
               ) : outbuildings.filter(item => item != null).map((item, idx) => {
-                // Check if contract ends within 3 months
-                let rowColor = '';
+                let rowHighlight = '';
                 if (item.endDate && item.status) {
                   const endDate = new Date(item.endDate);
                   const today = new Date();
                   const threeMonthsFromNow = new Date();
                   threeMonthsFromNow.setMonth(today.getMonth() + 3);
-                  
                   if (endDate <= threeMonthsFromNow && endDate >= today) {
-                    rowColor = 'bg-red-100';
+                    rowHighlight = 'bg-orange-50';
                   }
                 }
-                
                 return (
-                <tr key={item.id} className={`hover:bg-gray-50 ${rowColor}`}>
-                  <td className="p-2 border whitespace-nowrap">{idx + 1}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.description || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.purposeText || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.legalStatusText || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">
-                    <span className={`px-2 py-1 rounded text-xs ${item.status ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                      {item.status ? 'مستغل' : 'غير مستغل'}
-                    </span>
-                  </td>
-                  <td className="p-2 border whitespace-nowrap">{item.tenantName || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.tenantNationalId || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.space || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.price || '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.hasElectricityMeter ? 'نعم' : 'لا'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.hasWaterMeter ? 'نعم' : 'لا'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.startDate ? new Date(item.startDate).toLocaleDateString('ar-EG') : '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">{item.endDate ? new Date(item.endDate).toLocaleDateString('ar-EG') : '-'}</td>
-                  <td className="p-2 border whitespace-nowrap">
-                    <button
-                      className="px-3 py-1 rounded text-xs"
-                      style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
-                      onClick={() => onShowDetails(item)}
-                    >
-                      عرض
-                    </button>
-                  </td>
-                </tr>
+                  <tr key={item.id} className={`hover:bg-gray-50/70 transition-colors duration-150 ${rowHighlight}`}>
+                    <td className="px-3 py-3 text-gray-500 whitespace-nowrap">{idx + 1}</td>
+                    <td className="px-3 py-3 font-medium text-gray-900 whitespace-nowrap">{item.description || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.purposeText || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.legalStatusText || '-'}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded-full text-sm font-medium ${item.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                        {item.status ? 'مستغل' : 'غير مستغل'}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.tenantName || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.tenantNationalId || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.space || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.price || '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.hasElectricityMeter ? 'نعم' : 'لا'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.hasWaterMeter ? 'نعم' : 'لا'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.startDate ? new Date(item.startDate).toLocaleDateString('ar-EG') : '-'}</td>
+                    <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.endDate ? new Date(item.endDate).toLocaleDateString('ar-EG') : '-'}</td>
+                    <td className="px-3 py-3 whitespace-nowrap">
+                      <button
+                        className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
+                        style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
+                        onClick={() => onShowDetails(item)}
+                      >
+                        عرض
+                      </button>
+                    </td>
+                  </tr>
                 );
               })}
             </tbody>
