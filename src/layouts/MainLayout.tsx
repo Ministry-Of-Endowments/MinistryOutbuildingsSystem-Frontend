@@ -48,8 +48,8 @@ export default function MainLayout() {
 
       <div className="w-full px-4 py-5 grid grid-cols-1 md:grid-cols-[220px_1fr] gap-4 h-[calc(100vh-72px)] overflow-hidden" dir="rtl">
         <aside className="bg-white rounded-xl shadow-sm p-3 shrink-0 flex flex-col gap-1">
-          {navLink('/mosques', 'المساجد', isActive('/mosques') || isActive('/'))}
-          {navLink('/add-mosque', 'إضافة مسجد', isActive('/add-mosque'))}
+          {navLink('/', 'لوحة المعلومات', isActive('/'))}
+          {navLink('/mosques', 'المساجد', isActive('/mosques'))}
           {navLink('/outbuildings', 'جميع الملحقات', isActive('/outbuildings'))}
         </aside>
 

@@ -217,3 +217,52 @@ export interface OutbuildingFilter {
   purpose?: OutbuildingPurpose;
   legalStatus?: LegalStatus;
 }
+
+// Dashboard DTOs
+export interface OverviewCardsDto {
+  totalOutbuildings: number;
+  totalMosques: number;
+  vacantOutbuildingsCount: number;
+  activeRentTotal: number;
+  criticalLegalCasesCount: number;
+}
+
+export interface PurposeDistributionItemDto {
+  purposeValue: number;
+  purposeLabel: string;
+  count: number;
+}
+
+export interface OccupancyDistributionDto {
+  occupiedCount: number;
+  vacantCount: number;
+}
+
+export interface OverviewChartsDto {
+  purposeDistribution: PurposeDistributionItemDto[];
+  occupancyDistribution: OccupancyDistributionDto;
+}
+
+export interface LegalCriticalRowDto {
+  outbuildingId: number;
+  outbuildingDescription?: string;
+  mosqueName?: string;
+  governorateName?: string;
+  directorateName?: string;
+  administrationName?: string;
+  legalStatusText: string;
+  notes?: string;
+}
+
+export interface ExpiringRentRowDto {
+  outbuildingId: number;
+  outbuildingDescription?: string;
+  mosqueName?: string;
+  tenantName?: string;
+  rentValue?: number;
+  endDate?: string;
+  daysLeft: number;
+  governorateName?: string;
+  directorateName?: string;
+  administrationName?: string;
+}

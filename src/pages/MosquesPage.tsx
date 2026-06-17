@@ -12,6 +12,7 @@ import OutbuildingsListModal from '../components/OutbuildingsListModal';
 import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
 import OutbuildingEditModal from '../components/OutbuildingEditModal';
 import ContractModal from '../components/ContractModal';
+import AddMosqueModal from '../components/AddMosqueModal';
 
 type Administration = { id: number; name: string };
 type DirectorateWithAdmins = { id: number; name: string; administrations: Administration[] };
@@ -101,6 +102,7 @@ export default function MosquesPage() {
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<any>({});
   const [confirmState, setConfirmState] = useState<{ message: string; onConfirm: () => void } | null>(null);
+  const [showAddMosqueModal, setShowAddMosqueModal] = useState(false);
 
   function promptConfirm(message: string, action: () => void) {
     setConfirmState({ message, onConfirm: action });
@@ -636,6 +638,13 @@ export default function MosquesPage() {
             >
               تصدير
             </button>
+            <button
+              onClick={() => setShowAddMosqueModal(true)}
+              className="px-4 py-2 rounded text-white"
+              style={{ backgroundColor: 'var(--primary)' }}
+            >
+              + إضافة مسجد
+            </button>
           </div>
         </div>
       </div>
@@ -719,6 +728,13 @@ export default function MosquesPage() {
           onClose={() => setShowContractModal(false)}
           onSubmit={handleContract}
           onChange={setContractForm}
+        />
+      )}
+
+      {showAddMosqueModal && (
+        <AddMosqueModal
+          onClose={() => setShowAddMosqueModal(false)}
+          onSuccess={() => { fetchMosques(); }}
         />
       )}
 

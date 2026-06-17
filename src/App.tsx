@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import LoginPage, { type AuthInfo } from './pages/LoginPage';
 import MainLayout from './layouts/MainLayout';
+import DashboardPage from './pages/DashboardPage';
 import MosquesPage from './pages/MosquesPage';
-import AddMosquePage from './pages/AddMosquePage';
 import OutbuildingsPage from './pages/OutbuildingsPage';
 import { ToastProvider } from './components/Toast';
 
@@ -38,9 +38,8 @@ export default function App() {
       <Router>
         <Routes>
           <Route element={<MainLayout />}>
-            <Route path="/" element={<MosquesPage />} />
+            <Route path="/" element={<DashboardPage />} />
             <Route path="/mosques" element={<MosquesPage />} />
-            <Route path="/add-mosque" element={<AddMosquePage />} />
             <Route path="/outbuildings" element={<OutbuildingsPage />} />
           </Route>
         </Routes>

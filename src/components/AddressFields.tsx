@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { apiFetch } from '../utils/api';
-import type { Governorate, Department } from '../utils/types';
+import { fetchGovernoratesCached } from '../utils/cache';
+import type { Governorate } from '../utils/types';
 
 interface AddressFieldsProps {
   governorateId: number | string;
@@ -39,18 +39,8 @@ export default function AddressFields({
   async function fetchGovernorates() {
     setLoading(true);
     try {
-      const res = await apiFetch('/Outbuildings/Governorates/WithDepartmentsAndSheikhdoms');
-      const data = await res.json();
-      if (data.status === 'success') {
-        const sorted = (data.data || []).map((gov: Governorate) => ({
-          ...gov,
-          departments: gov.departments.map((dept: Department) => ({
-            ...dept,
-            sheikhdoms: [...dept.sheikhdoms].sort((a, b) => a.name.localeCompare(b.name, 'ar'))
-          })).sort((a: Department, b: Department) => a.name.localeCompare(b.name, 'ar'))
-        })).sort((a: Governorate, b: Governorate) => a.name.localeCompare(b.name, 'ar'));
-        setGovernorates(sorted);
-      }
+      const data = await fetchGovernoratesCached();
+      setGovernorates(data);
     } catch (e) {
       console.error('Failed to fetch governorates:', e);
     } finally {
@@ -64,19 +54,8 @@ export default function AddressFields({
   const selectedDepartment = availableDepartments.find(d => d.id === Number(departmentId));
   const availableSheikhdoms = selectedDepartment?.sheikhdoms || [];
 
-  console.log('AddressFields Debug:', {
-    governorateId,
-    selectedGovernorate: selectedGovernorate?.name,
-    departmentsCount: availableDepartments.length,
-    departmentId,
-    selectedDepartment: selectedDepartment?.name,
-    sheikhdomsCount: availableSheikhdoms.length
-  });
-
   function handleGovernorateChange(e: React.ChangeEvent<HTMLSelectElement>) {
-    const value = e.target.value;
-    console.log('Governorate changed to:', value);
-    onGovernorateChange(value);
+    onGovernorateChange(e.target.value);
   }
 
   function handleDepartmentChange(e: React.ChangeEvent<HTMLSelectElement>) {
