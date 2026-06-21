@@ -223,6 +223,7 @@ export interface OverviewCardsDto {
   totalOutbuildings: number;
   totalMosques: number;
   vacantOutbuildingsCount: number;
+  unusedOutbuildingsCount: number;
   activeRentTotal: number;
   criticalLegalCasesCount: number;
 }

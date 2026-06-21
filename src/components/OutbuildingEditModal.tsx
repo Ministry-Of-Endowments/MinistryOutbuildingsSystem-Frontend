@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { fetchPurposesCached } from '../utils/cache';
 import { OutbuildingPurpose, LegalStatus, getOutbuildingPurposeLabel, getLegalStatusLabel, type PurposeOption } from '../utils/types';
-import AddressFields from './AddressFields';
 
 type OutbuildingEditModalProps = {
   outbuildingDescription: string;
@@ -79,8 +78,8 @@ export default function OutbuildingEditModal({
   }, []);
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-auto">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">تعديل الملحق - {outbuildingDescription}</h3>
           <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
@@ -104,19 +103,6 @@ export default function OutbuildingEditModal({
             )}
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <AddressFields
-              governorateId={form.governorateId}
-              departmentId={form.departmentId}
-              sheikhdomId={form.sheikhdomId}
-              street={form.street}
-              onGovernorateChange={(id) => onChange({ ...form, governorateId: String(id), departmentId: '', sheikhdomId: '' })}
-              onDepartmentChange={(id) => onChange({ ...form, departmentId: String(id), sheikhdomId: '' })}
-              onSheikhdomChange={(id) => onChange({ ...form, sheikhdomId: String(id) })}
-              onStreetChange={(street) => onChange({ ...form, street })}
-              required={true}
-            />
-          </div>
           <div>
             <label className="block mb-1 font-semibold">النشاط</label>
             <select
@@ -257,7 +243,7 @@ export default function OutbuildingEditModal({
               value={form.tenantName}
               onChange={e => onChange({ ...form, tenantName: e.target.value })}
               className="w-full border rounded px-3 py-2"
-              placeholder="اسم المنتفع (اختياري)"
+              placeholder="اسم المنتفع "
             />
           </div>
           <div>

@@ -12,8 +12,10 @@ interface AddressFieldsProps {
   onSheikhdomChange: (sheikhdomId: number | string) => void;
   onStreetChange: (street: string) => void;
   required?: boolean;
+  streetRequired?: boolean;
   disabled?: boolean;
   governorateDisabled?: boolean;
+  readonlyLookups?: boolean;
 }
 
 export default function AddressFields({
@@ -26,8 +28,10 @@ export default function AddressFields({
   onSheikhdomChange,
   onStreetChange,
   required = true,
+  streetRequired,
   disabled = false,
   governorateDisabled = false,
+  readonlyLookups = false,
 }: AddressFieldsProps) {
   const [governorates, setGovernorates] = useState<Governorate[]>([]);
   const [loading, setLoading] = useState(false);
@@ -72,6 +76,8 @@ export default function AddressFields({
     onStreetChange(e.target.value);
   }
 
+  const isStreetRequired = streetRequired ?? required;
+
   if (loading) {
     return <div className="text-center py-4">جاري تحميل المواقع...</div>;
   }
@@ -80,67 +86,94 @@ export default function AddressFields({
     <>
       <div className="relative z-30">
         <label className="block mb-1 font-semibold text-sm">
-          المحافظة {required && <span className="text-red-500">*</span>}
+          المحافظة {required && !readonlyLookups && <span className="text-red-500">*</span>}
         </label>
-        <select
-          value={governorateId}
-          onChange={handleGovernorateChange}
-          className="w-full p-2 border rounded cursor-pointer"
-          required={required}
-          disabled={disabled || governorateDisabled}
-        >
-          <option value="">-- اختر المحافظة --</option>
-          {governorates.map((gov) => (
-            <option key={gov.id} value={gov.id}>
-              {gov.name}
-            </option>
-          ))}
-        </select>
+        {readonlyLookups ? (
+          <input
+            type="text"
+            readOnly
+            value={selectedGovernorate?.name || ''}
+            className="w-full p-2 border rounded bg-gray-100 text-gray-600 cursor-default"
+          />
+        ) : (
+          <select
+            value={governorateId}
+            onChange={handleGovernorateChange}
+            className="w-full p-2 border rounded cursor-pointer"
+            required={required}
+            disabled={disabled || governorateDisabled}
+          >
+            <option value="">-- اختر المحافظة --</option>
+            {governorates.map((gov) => (
+              <option key={gov.id} value={gov.id}>
+                {gov.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="relative z-20">
         <label className="block mb-1 font-semibold text-sm">
-          القسم {required && <span className="text-red-500">*</span>}
+          القسم {required && !readonlyLookups && <span className="text-red-500">*</span>}
         </label>
-        <select
-          value={departmentId}
-          onChange={handleDepartmentChange}
-          className="w-full p-2 border rounded cursor-pointer"
-          required={required}
-          disabled={disabled || !governorateId}
-        >
-          <option value="">-- اختر القسم --</option>
-          {availableDepartments.map((dept) => (
-            <option key={dept.id} value={dept.id}>
-              {dept.name}
-            </option>
-          ))}
-        </select>
+        {readonlyLookups ? (
+          <input
+            type="text"
+            readOnly
+            value={selectedDepartment?.name || ''}
+            className="w-full p-2 border rounded bg-gray-100 text-gray-600 cursor-default"
+          />
+        ) : (
+          <select
+            value={departmentId}
+            onChange={handleDepartmentChange}
+            className="w-full p-2 border rounded cursor-pointer"
+            required={required}
+            disabled={disabled || !governorateId}
+          >
+            <option value="">-- اختر القسم --</option>
+            {availableDepartments.map((dept) => (
+              <option key={dept.id} value={dept.id}>
+                {dept.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div className="relative z-10">
         <label className="block mb-1 font-semibold text-sm">
-          الشياخة {required && <span className="text-red-500">*</span>}
+          الشياخة {required && !readonlyLookups && <span className="text-red-500">*</span>}
         </label>
-        <select
-          value={sheikhdomId}
-          onChange={handleSheikhdomChange}
-          className="w-full p-2 border rounded cursor-pointer"
-          required={required}
-          disabled={disabled || !departmentId}
-        >
-          <option value="">-- اختر الشياخة --</option>
-          {availableSheikhdoms.map((shk) => (
-            <option key={shk.id} value={shk.id}>
-              {shk.name}
-            </option>
-          ))}
-        </select>
+        {readonlyLookups ? (
+          <input
+            type="text"
+            readOnly
+            value={availableSheikhdoms.find(s => s.id === Number(sheikhdomId))?.name || ''}
+            className="w-full p-2 border rounded bg-gray-100 text-gray-600 cursor-default"
+          />
+        ) : (
+          <select
+            value={sheikhdomId}
+            onChange={handleSheikhdomChange}
+            className="w-full p-2 border rounded cursor-pointer"
+            required={required}
+            disabled={disabled || !departmentId}
+          >
+            <option value="">-- اختر الشياخة --</option>
+            {availableSheikhdoms.map((shk) => (
+              <option key={shk.id} value={shk.id}>
+                {shk.name}
+              </option>
+            ))}
+          </select>
+        )}
       </div>
 
       <div>
         <label className="block mb-1 font-semibold text-sm">
-          الشارع {required && <span className="text-red-500">*</span>}
+          الشارع {isStreetRequired && <span className="text-red-500">*</span>}
         </label>
         <input
           type="text"
@@ -148,7 +181,7 @@ export default function AddressFields({
           onChange={handleStreetChange}
           className="w-full p-2 border rounded"
           placeholder="أدخل اسم الشارع"
-          required={required}
+          required={isStreetRequired}
           disabled={disabled}
         />
       </div>

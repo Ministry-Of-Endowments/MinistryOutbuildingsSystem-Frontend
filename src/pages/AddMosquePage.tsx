@@ -109,7 +109,7 @@ export default function AddMosquePage() {
         </div>
 
         <div className="col-span-full">
-          <label className="block mb-1 font-semibold">الملاحظات (اختياري)</label>
+          <label className="block mb-1 font-semibold">الملاحظات </label>
           <textarea
             name="notes"
             value={form.notes}

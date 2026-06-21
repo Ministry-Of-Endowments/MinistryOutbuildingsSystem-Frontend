@@ -45,8 +45,8 @@ export default function MosqueEditModal({
   const availableAdministrations = selectedDirectorate?.administrations || [];
 
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-y-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h3 className="text-lg font-semibold">تعديل المسجد</h3>
           <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
@@ -100,13 +100,13 @@ export default function MosqueEditModal({
           </div>
 
           <div>
-            <label className="block mb-1 font-semibold">العنوان</label>
+            <label className="block mb-1 font-semibold">الموقع </label>
             <input
-              type="text"
+              type="url"
               value={form.address}
               onChange={(e) => onChange({ ...form, address: e.target.value })}
-              required
               className="w-full border rounded px-3 py-2"
+              placeholder="https://maps.google.com/..."
             />
           </div>
 

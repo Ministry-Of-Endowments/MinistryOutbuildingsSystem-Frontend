@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { apiFetch } from '../utils/api';
-import { fetchDirectoratesCached, fetchPurposesCached } from '../utils/cache';
-import type { Outbuilding, Directorate, PurposeOption } from '../utils/types';
+import { apiFetch, getBackendUrl } from '../utils/api';
+import { fetchPurposesCached } from '../utils/cache';
+import type { Outbuilding, PurposeOption } from '../utils/types';
 import { getLegalStatusLabel, LegalStatus } from '../utils/types';
 
 type OutbuildingsListModalProps = {
@@ -12,9 +12,6 @@ type OutbuildingsListModalProps = {
   onShowDetails: (outbuilding: Outbuilding) => void;
   onAddOutbuilding: () => void;
   onFilter: (filter: {
-    directorateName?: string;
-    administrationName?: string;
-    mosqueName?: string;
     minSize?: number | null;
     maxSize?: number | null;
     status?: boolean | null;
@@ -36,12 +33,8 @@ export default function OutbuildingsListModal({
   onFilter,
 }: OutbuildingsListModalProps) {
   const [showFilters, setShowFilters] = useState(false);
-  const [directorates, setDirectorates] = useState<Directorate[]>([]);
   const [purposes, setPurposes] = useState<PurposeOption[]>([]);
   const [filterForm, setFilterForm] = useState({
-    directorateName: '',
-    administrationName: '',
-    mosqueName: '',
     minSize: '',
     maxSize: '',
     status: null as boolean | null,
@@ -53,7 +46,6 @@ export default function OutbuildingsListModal({
   });
 
   useEffect(() => {
-    fetchDirectoratesCached().then(setDirectorates).catch(() => {});
     fetchPurposesCached()
       .then(data => setPurposes([...data].sort((a: PurposeOption, b: PurposeOption) => a.label.localeCompare(b.label, 'ar'))))
       .catch(() => {});
@@ -61,9 +53,6 @@ export default function OutbuildingsListModal({
 
   const handleApplyFilters = () => {
     onFilter({
-      directorateName: filterForm.directorateName || undefined,
-      administrationName: filterForm.administrationName || undefined,
-      mosqueName: filterForm.mosqueName || undefined,
       minSize: filterForm.minSize ? parseFloat(filterForm.minSize) : null,
       maxSize: filterForm.maxSize ? parseFloat(filterForm.maxSize) : null,
       status: filterForm.status,
@@ -77,9 +66,6 @@ export default function OutbuildingsListModal({
 
   const handleResetFilters = () => {
     setFilterForm({
-      directorateName: '',
-      administrationName: '',
-      mosqueName: '',
       minSize: '',
       maxSize: '',
       status: null,
@@ -95,10 +81,9 @@ export default function OutbuildingsListModal({
   const handleExport = async () => {
     try {
       const params = new URLSearchParams();
-      
-      if (filterForm.directorateName) params.append('DirectorateName', filterForm.directorateName);
-      if (filterForm.administrationName) params.append('AdministrationName', filterForm.administrationName);
-      if (filterForm.mosqueName) params.append('MosqueName', filterForm.mosqueName);
+
+      // Always scope export to this mosque
+      params.append('MosqueName', mosqueName);
       if (filterForm.minSize) params.append('MinSpace', filterForm.minSize);
       if (filterForm.maxSize) params.append('MaxSpace', filterForm.maxSize);
       if (filterForm.status !== null) params.append('Status', String(filterForm.status));
@@ -132,21 +117,9 @@ export default function OutbuildingsListModal({
     }
   };
 
-  // Get administrations for selected directorate
-  const selectedDirectorate = directorates.find(d => d.name === filterForm.directorateName);
-  const availableAdministrations = selectedDirectorate?.administrations || [];
-
-  const handleDirectorateChange = (directorateName: string) => {
-    setFilterForm({
-      ...filterForm,
-      directorateName,
-      administrationName: '',
-    });
-  };
-
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="modal-container bg-white rounded-xl shadow-xl w-[98vw] max-w-[1800px] h-[90vh] p-6 flex flex-col">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-container bg-white rounded-xl shadow-xl w-[98vw] max-w-[1800px] h-[90vh] p-6 flex flex-col" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4 shrink-0">
           <h3 className="text-lg font-semibold">ملحقات مسجد: {mosqueName}</h3>
           <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
@@ -158,46 +131,13 @@ export default function OutbuildingsListModal({
             onClick={() => setShowFilters(!showFilters)}
             className="flex items-center gap-2 px-4 py-2 border rounded hover:bg-white transition-colors text-sm"
           >
-            <span>{showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}</span>
+            <span>{showFilters ? 'إخفاء التصفية' : 'خيارات التصفية'}</span>
             <span className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}>▾</span>
           </button>
           
           {showFilters && (
             <div className="mt-3 p-4 border rounded bg-gray-50">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <label className="block mb-1 font-semibold text-sm">المديرية</label>
-                  <select
-                    value={filterForm.directorateName}
-                    onChange={e => handleDirectorateChange(e.target.value)}
-                    className="w-full border rounded px-3 py-2"
-                    style={{ maxHeight: '300px', overflowY: 'auto' }}
-                    size={1}
-                  >
-                    <option value="">الكل</option>
-                    {directorates.map(dir => (
-                      <option key={dir.id} value={dir.name}>{dir.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className={`block mb-1 font-semibold text-sm ${!filterForm.directorateName ? 'text-gray-400' : ''}`}>الإدارة</label>
-                  <select
-                    value={filterForm.administrationName}
-                    onChange={e => setFilterForm({ ...filterForm, administrationName: e.target.value })}
-                    disabled={!filterForm.directorateName}
-                    className={`w-full border rounded px-3 py-2 ${!filterForm.directorateName ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
-                    style={{ maxHeight: '300px', overflowY: 'auto' }}
-                    size={1}
-                  >
-                    <option value="">الكل</option>
-                    {availableAdministrations.map(admin => (
-                      <option key={admin.id} value={admin.name}>{admin.name}</option>
-                    ))}
-                  </select>
-                </div>
-                
                 <div>
                   <label className="block mb-1 font-semibold text-sm">الحالة</label>
                   <select
@@ -311,7 +251,7 @@ export default function OutbuildingsListModal({
                   className="px-4 py-2 rounded text-white"
                   style={{ backgroundColor: 'var(--primary)' }}
                 >
-                  تطبيق الفلاتر
+                  تطبيق التصفية
                 </button>
                 <button
                   onClick={handleResetFilters}
@@ -373,7 +313,7 @@ export default function OutbuildingsListModal({
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.purposeText || '-'}</td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.legalStatusText || '-'}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <span className={`px-2 py-1 rounded-full text-sm font-medium ${item.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                      <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${item.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                         {item.status ? 'مستغل' : 'غير مستغل'}
                       </span>
                     </td>
@@ -386,13 +326,25 @@ export default function OutbuildingsListModal({
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.startDate ? new Date(item.startDate).toLocaleDateString('ar-EG') : '-'}</td>
                     <td className="px-3 py-3 text-gray-600 whitespace-nowrap">{item.endDate ? new Date(item.endDate).toLocaleDateString('ar-EG') : '-'}</td>
                     <td className="px-3 py-3 whitespace-nowrap">
-                      <button
-                        className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
-                        style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
-                        onClick={() => onShowDetails(item)}
-                      >
-                        عرض
-                      </button>
+                      <div className="flex gap-1.5">
+                        <button
+                          className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
+                          style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
+                          onClick={() => onShowDetails(item)}
+                        >
+                          عرض
+                        </button>
+                        {item.contractUrl && (
+                          <a
+                            href={getBackendUrl(item.contractUrl)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-3 py-1.5 rounded-md text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 transition-all duration-150 active:scale-95"
+                          >
+                            العقد
+                          </a>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 );

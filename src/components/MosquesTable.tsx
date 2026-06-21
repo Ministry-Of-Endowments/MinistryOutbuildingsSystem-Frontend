@@ -13,13 +13,13 @@ export default function MosquesTable({ mosques, loading, onShowDetails, onViewOu
       <table className="w-full text-right">
         <thead>
           <tr className="bg-gray-50 border-b border-gray-200">
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">#</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">الاسم</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">المديرية</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">الإدارة</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">العنوان</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600">ملاحظات</th>
-            <th className="px-4 py-3 text-sm font-semibold text-gray-600 w-48">الإجراءات</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">#</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">الاسم</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">المديرية</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">الإدارة</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">العنوان</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600">ملاحظات</th>
+            <th className="px-3 py-2 text-xs font-semibold text-gray-600 w-44">الإجراءات</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -29,23 +29,23 @@ export default function MosquesTable({ mosques, loading, onShowDetails, onViewOu
             <tr><td colSpan={7} className="px-4 py-8 text-center text-gray-400">لا توجد بيانات لعرضها</td></tr>
           ) : mosques.map((mosque, idx) => (
             <tr key={mosque.id} className="hover:bg-gray-50/70 transition-colors duration-150">
-              <td className="px-4 py-3 text-gray-500">{idx + 1}</td>
-              <td className="px-4 py-3 font-medium text-gray-900">{mosque.name || '-'}</td>
-              <td className="px-4 py-3 text-gray-600">{mosque.directorateName || '-'}</td>
-              <td className="px-4 py-3 text-gray-600">{mosque.administrationName || '-'}</td>
-              <td className="px-4 py-3 text-gray-600">{mosque.address || '-'}</td>
-              <td className="px-4 py-3 text-gray-500">{mosque.notes || '-'}</td>
-              <td className="px-4 py-3">
-                <div className="flex gap-2">
+              <td className="px-3 py-2 text-sm text-gray-500">{idx + 1}</td>
+              <td className="px-3 py-2 text-sm font-medium text-gray-900">{mosque.name || '-'}</td>
+              <td className="px-3 py-2 text-sm text-gray-600">{mosque.directorateName || '-'}</td>
+              <td className="px-3 py-2 text-sm text-gray-600">{mosque.administrationName || '-'}</td>
+              <td className="px-3 py-2 text-sm text-gray-600">{mosque.address || '-'}</td>
+              <td className="px-3 py-2 text-sm text-gray-500">{mosque.notes || '-'}</td>
+              <td className="px-3 py-2">
+                <div className="flex gap-1.5">
                   <button
-                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
+                    className="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 active:scale-95"
                     style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
                     onClick={() => onShowDetails(mosque)}
                   >
                     عرض البيانات
                   </button>
                   <button
-                    className="px-3 py-1.5 rounded-md text-sm font-medium transition-all duration-150 active:scale-95"
+                    className="px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 active:scale-95"
                     style={{ backgroundColor: 'var(--primary)', color: '#fff' }}
                     onClick={() => onViewOutbuildings(mosque)}
                   >

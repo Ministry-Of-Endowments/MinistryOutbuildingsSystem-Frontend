@@ -17,8 +17,8 @@ export default function OutbuildingDetailsModal({
   onAddContract,
 }: OutbuildingDetailsModalProps) {
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="modal-container bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-auto">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-xl font-bold text-gray-900">تفاصيل الملحق</h3>
           <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
@@ -86,7 +86,7 @@ export default function OutbuildingDetailsModal({
               <tr>
                 <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الحالة</td>
                 <td className="px-4 py-3">
-                  <span className={`px-2 py-1 rounded-full text-sm font-medium ${outbuilding.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                  <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap ${outbuilding.status ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
                     {outbuilding.status ? 'مستغل' : 'غير مستغل'}
                   </span>
                 </td>
@@ -148,7 +148,7 @@ export default function OutbuildingDetailsModal({
         </div>
 
         <div className="flex justify-end gap-2">
-          {!outbuilding.status && (
+          {!outbuilding.status && !outbuilding.contractUrl && (
             <button
               className="px-4 py-2 rounded-lg text-white transition-colors active:scale-95 duration-150"
               style={{ backgroundColor: 'var(--primary)' }}

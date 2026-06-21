@@ -1,4 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../utils/api';
 import type {
   OverviewCardsDto,
@@ -37,17 +38,22 @@ function StatCard({
   value,
   accent,
   iconPath,
+  onClick,
 }: {
   label: string;
   value: string | number;
   accent: 'brand' | 'alert';
   iconPath: string;
+  onClick?: () => void;
 }) {
   const iconBg = accent === 'alert' ? 'bg-rose-50' : 'bg-[#f5ede0]';
   const iconColor = accent === 'alert' ? 'text-rose-600' : 'text-[#8a7540]';
 
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3">
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-xl border border-gray-200 p-4 flex items-center gap-3 ${onClick ? 'cursor-pointer hover:border-gray-300 hover:shadow-sm transition-all group' : ''}`}
+    >
       <div className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${iconBg}`}>
         <svg className={`w-5 h-5 ${iconColor}`} fill="currentColor" viewBox="0 0 24 24">
           <path d={iconPath} />
@@ -60,7 +66,14 @@ function StatCard({
         >
           {value}
         </div>
-        <div className="text-xs text-gray-400 mt-0.5 whitespace-nowrap">{label}</div>
+        <div className="text-xs text-gray-400 mt-0.5 whitespace-nowrap flex items-center justify-end gap-1">
+          {label}
+          {onClick && (
+            <svg className="w-3 h-3 text-gray-300 group-hover:text-gray-400 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+            </svg>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -204,6 +217,7 @@ function TableSection({
 // ── Main Page ──────────────────────────────────────────────────────────────────
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   const [cards, setCards] = useState<OverviewCardsDto | null>(null);
   const [charts, setCharts] = useState<OverviewChartsDto | null>(null);
   const [legalTable, setLegalTable] = useState<LegalCriticalRowDto[]>([]);
@@ -260,30 +274,35 @@ export default function DashboardPage() {
               value={cards.totalOutbuildings}
               accent="brand"
               iconPath="M3 21h18v-2H3v2zm0-4h4v-2H3v2zm6 0h4v-2H9v2zm6 0h4v-2h-4v2zM3 13h4v-2H3v2zm6 0h4v-2H9v2zm6 0h4v-2h-4v2zM3 9h4V7H3v2zm6 0h4V7H9v2zm6 0h4V7h-4v2zM3 5h18V3H3v2z"
+              onClick={() => navigate('/outbuildings')}
             />
             <StatCard
               label="إجمالي المساجد"
               value={cards.totalMosques}
               accent="brand"
               iconPath="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"
+              onClick={() => navigate('/mosques')}
             />
             <StatCard
-              label="الملحقات الشاغرة"
-              value={cards.vacantOutbuildingsCount}
+              label="الملحقات غير المستغلة"
+              value={cards.unusedOutbuildingsCount}
               accent="brand"
               iconPath="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 15v-4H7l5-8v4h4l-5 8z"
+              onClick={() => navigate('/outbuildings?status=false')}
             />
             <StatCard
               label="إجمالي الإيجارات النشطة"
               value={formatCurrency(cards.activeRentTotal)}
               accent="brand"
               iconPath="M11.8 10.9c-2.27-.59-3-1.2-3-2.15 0-1.09 1.01-1.85 2.7-1.85 1.78 0 2.44.85 2.5 2.1h2.21c-.07-1.72-1.12-3.3-3.21-3.81V3h-3v2.16c-1.94.42-3.5 1.68-3.5 3.61 0 2.31 1.91 3.46 4.7 4.13 2.5.6 3 1.48 3 2.41 0 .69-.49 1.79-2.7 1.79-2.06 0-2.87-.92-2.98-2.1h-2.2c.12 2.19 1.76 3.42 3.68 3.83V21h3v-2.15c1.95-.37 3.5-1.5 3.5-3.55 0-2.84-2.43-3.81-4.7-4.4z"
+              onClick={() => navigate('/outbuildings?status=true')}
             />
             <StatCard
               label="القضايا القانونية الحرجة"
               value={cards.criticalLegalCasesCount}
               accent="alert"
               iconPath="M1 21h22L12 2 1 21zm12-3h-2v-2h2v2zm0-4h-2v-4h2v4z"
+              onClick={() => navigate('/outbuildings?legalCritical=true')}
             />
           </>
         ) : null}
@@ -334,7 +353,7 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {legalTable.map((row, idx) => (
-                  <tr key={row.outbuildingId} className="hover:bg-gray-50 transition-colors">
+                  <tr key={row.outbuildingId} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/outbuildings?legalCritical=true')}>
                     <td className="px-4 py-2.5 text-gray-300 text-xs whitespace-nowrap">{idx + 1}</td>
                     <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap">
                       {row.outbuildingDescription || '—'}
@@ -389,7 +408,7 @@ export default function DashboardPage() {
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {expiringContracts.map((row, idx) => (
-                  <tr key={row.outbuildingId} className="hover:bg-gray-50 transition-colors">
+                  <tr key={row.outbuildingId} className="hover:bg-gray-50 transition-colors cursor-pointer" onClick={() => navigate('/outbuildings?status=true')}>
                     <td className="px-4 py-2.5 text-gray-300 text-xs whitespace-nowrap">{idx + 1}</td>
                     <td className="px-4 py-2.5 text-gray-700 font-medium whitespace-nowrap">
                       {row.outbuildingDescription || '—'}

@@ -14,8 +14,8 @@ export default function MosqueDetailsModal({
   onDelete,
 }: MosqueDetailsModalProps) {
   return (
-    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-auto">
+    <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50" onClick={onClose}>
+      <div className="modal-container bg-white rounded-xl shadow-xl max-w-2xl w-full p-6 max-h-[90vh] overflow-auto" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-5">
           <h3 className="text-xl font-bold text-gray-900">تفاصيل المسجد</h3>
           <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={onClose} aria-label="إغلاق">✕</button>
@@ -36,10 +36,16 @@ export default function MosqueDetailsModal({
                 <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الإدارة</td>
                 <td className="px-4 py-3 text-gray-900">{mosque.administrationName || '-'}</td>
               </tr>
-              <tr>
-                <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">العنوان</td>
-                <td className="px-4 py-3 text-gray-900">{mosque.address || '-'}</td>
-              </tr>
+              {mosque.address && (
+                <tr>
+                  <td className="px-4 py-3 bg-gray-50 font-semibold text-gray-600">الموقع</td>
+                  <td className="px-4 py-3">
+                    <a href={mosque.address} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline break-all">
+                      فتح على خرائط Google
+                    </a>
+                  </td>
+                </tr>
+              )}
               {mosque.governorateName && (
               <tr>
                 <td className="p-3 bg-gray-50 font-semibold border border-gray-300">المحافظة</td>

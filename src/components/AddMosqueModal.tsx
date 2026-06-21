@@ -55,8 +55,8 @@ export default function AddMosqueModal({ onClose, onSuccess }: Props) {
 
   return (
     <Portal>
-      <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-9999">
-        <div className="modal-container bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto overflow-x-hidden">
+      <div className="modal-backdrop fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-9999" onClick={onClose}>
+        <div className="modal-container bg-white rounded-xl shadow-xl max-w-4xl w-full p-6 max-h-[90vh] overflow-y-auto overflow-x-hidden" onClick={(e: React.MouseEvent) => e.stopPropagation()}>
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-lg font-semibold">إضافة مسجد جديد</h3>
             <button
@@ -97,18 +97,18 @@ export default function AddMosqueModal({ onClose, onSuccess }: Props) {
             />
 
             <div className="col-span-full">
-              <label className="block mb-1 font-semibold">العنوان <span className="text-red-500">*</span></label>
+              <label className="block mb-1 font-semibold">الموقع </label>
               <input
-                type="text"
+                type="url"
                 value={form.address}
                 onChange={(e) => setForm({ ...form, address: e.target.value })}
-                required
                 className="w-full border rounded px-3 py-2"
+                placeholder="https://maps.google.com/..."
               />
             </div>
 
             <div className="col-span-full">
-              <label className="block mb-1 font-semibold">الملاحظات (اختياري)</label>
+              <label className="block mb-1 font-semibold">الملاحظات </label>
               <textarea
                 value={form.notes}
                 onChange={(e) => setForm({ ...form, notes: e.target.value })}

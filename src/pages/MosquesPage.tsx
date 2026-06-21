@@ -98,6 +98,14 @@ export default function MosquesPage() {
     legalStatus: null as number | null,
     hasElectricityMeter: false,
     hasWaterMeter: false,
+    status: false,
+    price: '',
+    tenantName: '',
+    tenantNationalId: '',
+    startDate: '',
+    endDate: '',
+    acceptanceDate: '',
+    contractFile: null as File | null,
   });
   const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
   const [currentFilter, setCurrentFilter] = useState<any>({});
@@ -306,9 +314,6 @@ export default function MosquesPage() {
       let url = `/Outbuildings/${mosqueId}`;
       if (filter && Object.keys(filter).length > 0) {
         const params = new URLSearchParams();
-        if (filter.administrationName) params.append('administrationName', filter.administrationName);
-        if (filter.directorateName) params.append('directorateName', filter.directorateName);
-        if (filter.mosqueName) params.append('mosqueName', filter.mosqueName);
         if (filter.status !== undefined && filter.status !== null) params.append('status', filter.status.toString());
         if (filter.purpose !== undefined && filter.purpose !== null) params.append('purpose', filter.purpose.toString());
         if (filter.legalStatus !== undefined && filter.legalStatus !== null) params.append('legalStatus', filter.legalStatus.toString());
@@ -530,6 +535,14 @@ export default function MosquesPage() {
       legalStatus: null,
       hasElectricityMeter: false,
       hasWaterMeter: false,
+      status: false,
+      price: '',
+      tenantName: '',
+      tenantNationalId: '',
+      startDate: '',
+      endDate: '',
+      acceptanceDate: '',
+      contractFile: null,
     });
     setShowModal(false);
     setShowAddOutbuildingModal(true);
@@ -540,24 +553,33 @@ export default function MosquesPage() {
     if (!selected) return;
     setAddOutbuildingLoading(true);
     try {
-      const payload = {
-        description: addOutbuildingForm.description,
-        governorateId: parseInt(addOutbuildingForm.governorateId),
-        departmentId: parseInt(addOutbuildingForm.departmentId),
-        sheikhdomId: parseInt(addOutbuildingForm.sheikhdomId),
-        street: addOutbuildingForm.street,
-        space: parseFloat(addOutbuildingForm.space),
-        notes: addOutbuildingForm.notes || null,
-        purpose: addOutbuildingForm.purpose,
-        customPurpose: addOutbuildingForm.customPurpose || null,
-        legalStatus: addOutbuildingForm.legalStatus,
-        hasElectricityMeter: addOutbuildingForm.hasElectricityMeter,
-        hasWaterMeter: addOutbuildingForm.hasWaterMeter,
-      };
+      const f = addOutbuildingForm;
+      const fd = new FormData();
+      fd.append('description', f.description);
+      fd.append('governorateId', f.governorateId);
+      fd.append('departmentId', f.departmentId);
+      fd.append('sheikhdomId', f.sheikhdomId);
+      fd.append('street', f.street || '');
+      fd.append('space', f.space);
+      fd.append('notes', f.notes || '');
+      fd.append('purpose', String(f.purpose));
+      if (f.customPurpose) fd.append('customPurpose', f.customPurpose);
+      if (f.legalStatus !== null) fd.append('legalStatus', String(f.legalStatus));
+      fd.append('hasElectricityMeter', String(f.hasElectricityMeter));
+      fd.append('hasWaterMeter', String(f.hasWaterMeter));
+      fd.append('status', String(f.status));
+      if (f.status) {
+        if (f.price) fd.append('price', f.price);
+        if (f.tenantName) fd.append('tenantName', f.tenantName);
+        if (f.tenantNationalId) fd.append('tenantNationalId', f.tenantNationalId);
+        if (f.startDate) fd.append('startDate', f.startDate);
+        if (f.endDate) fd.append('endDate', f.endDate);
+        if (f.acceptanceDate) fd.append('acceptanceDate', f.acceptanceDate);
+        if (f.contractFile) fd.append('contractFile', f.contractFile);
+      }
       const res = await apiFetch(`/Outbuildings/${selected.id}`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
+        body: fd,
       });
       const data = await res.json();
       if (data.status === 'success') {
@@ -576,14 +598,14 @@ export default function MosquesPage() {
 
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
-      <div className="mb-4 p-4 bg-gray-50/60 rounded-lg shadow-sm shrink-0">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-3">
+      <div className="mb-3 p-3 bg-gray-50/60 rounded-lg shadow-sm shrink-0">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
           <div>
             <label className="block mb-1 font-semibold text-sm">المديرية</label>
             <select
               value={selectedDirectorate}
               onChange={(e) => handleDirectorateChange(e.target.value)}
-              className="w-full border rounded px-3 py-2"
+              className="w-full border rounded px-2 py-1.5 text-sm"
             >
               <option value="">جميع المديريات</option>
               {uniqueDirectorates.map(dir => (
@@ -599,7 +621,7 @@ export default function MosquesPage() {
             <select
               value={selectedAdministration}
               onChange={(e) => handleAdministrationChange(e.target.value)}
-              className={`w-full border rounded px-3 py-2 ${!selectedDirectorate ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
+              className={`w-full border rounded px-2 py-1.5 text-sm ${!selectedDirectorate ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : ''}`}
               disabled={!selectedDirectorate}
             >
               <option value="">جميع الإدارات</option>
@@ -617,30 +639,30 @@ export default function MosquesPage() {
               value={searchKey}
               onChange={(e) => setSearchKey(e.target.value)}
               onKeyUp={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-(--primary)"
+              className="w-full border rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-(--primary)"
             />
           </div>
 
           <div className="flex items-end gap-2">
             <button
               onClick={handleSearch}
-              className="px-4 py-2 rounded text-white"
+              className="px-3 py-1.5 text-sm rounded text-white"
               style={{ backgroundColor: 'var(--primary)' }}
             >
               بحث
             </button>
-            <button onClick={handleResetFilters} className="px-4 py-2 border rounded hover:bg-gray-50">
+            <button onClick={handleResetFilters} className="px-3 py-1.5 text-sm border rounded hover:bg-gray-50">
               إعادة تعيين
             </button>
             <button
               onClick={handleExportExcel}
-              className="px-4 py-2 rounded text-white bg-green-600 hover:bg-green-700"
+              className="px-3 py-1.5 text-sm rounded text-white bg-green-600 hover:bg-green-700"
             >
               تصدير
             </button>
             <button
               onClick={() => setShowAddMosqueModal(true)}
-              className="px-4 py-2 rounded text-white"
+              className="px-3 py-1.5 text-sm rounded text-white"
               style={{ backgroundColor: 'var(--primary)' }}
             >
               + إضافة مسجد
