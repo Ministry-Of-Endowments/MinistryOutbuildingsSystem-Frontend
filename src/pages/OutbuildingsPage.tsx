@@ -9,6 +9,8 @@ import ConfirmModal from '../components/ConfirmModal';
 import OutbuildingDetailsModal from '../components/OutbuildingDetailsModal';
 import OutbuildingEditModal from '../components/OutbuildingEditModal';
 import ContractModal from '../components/ContractModal';
+import AddOutbuildingModal from '../components/AddOutbuildingModal';
+import Portal from '../components/Portal';
 
 export default function OutbuildingsPage() {
   const { toast } = useToast();
@@ -17,6 +19,35 @@ export default function OutbuildingsPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [directorates, setDirectorates] = useState<Directorate[]>([]);
   const [purposes, setPurposes] = useState<PurposeOption[]>([]);
+  const [allMosques, setAllMosques] = useState<Mosque[]>([]);
+  const [showMosqueSelectModal, setShowMosqueSelectModal] = useState(false);
+  const [mosqueSearchQuery, setMosqueSearchQuery] = useState('');
+  const [selectedMosqueForAdd, setSelectedMosqueForAdd] = useState<Mosque | null>(null);
+  const [showAddOutbuildingModal, setShowAddOutbuildingModal] = useState(false);
+  const [addOutbuildingForm, setAddOutbuildingForm] = useState({
+    description: '',
+    governorateId: '',
+    departmentId: '',
+    sheikhdomId: '',
+    street: '',
+    space: '',
+    notes: '',
+    purpose: 1,
+    customPurpose: '',
+    legalStatus: null as number | null,
+    hasElectricityMeter: false,
+    hasWaterMeter: false,
+    status: false,
+    price: '',
+    tenantName: '',
+    tenantNationalId: '',
+    startDate: '',
+    endDate: '',
+    acceptanceDate: '',
+    contractFile: null as File | null,
+  });
+  const [addOutbuildingLoading, setAddOutbuildingLoading] = useState(false);
+
   const [searchParams] = useSearchParams();
   const [filterForm, setFilterForm] = useState({
     directorateName: '',
@@ -120,6 +151,7 @@ export default function OutbuildingsPage() {
         return;
       }
 
+      setAllMosques(mosquesData.data as Mosque[]);
       const mosques = filterMosques(mosquesData.data as Mosque[], form);
       const query = buildOutbuildingQuery(form);
 
@@ -417,6 +449,82 @@ export default function OutbuildingsPage() {
     }
   }
 
+  function openAddOutbuildingFlow(mosque: Mosque) {
+    setSelectedMosqueForAdd(mosque);
+    setAddOutbuildingForm({
+      description: '',
+      governorateId: mosque.governorateId ? String(mosque.governorateId) : '',
+      departmentId: mosque.departmentId ? String(mosque.departmentId) : '',
+      sheikhdomId: mosque.sheikhdomId ? String(mosque.sheikhdomId) : '',
+      street: '',
+      space: '',
+      notes: '',
+      purpose: 1,
+      customPurpose: '',
+      legalStatus: null,
+      hasElectricityMeter: false,
+      hasWaterMeter: false,
+      status: false,
+      price: '',
+      tenantName: '',
+      tenantNationalId: '',
+      startDate: '',
+      endDate: '',
+      acceptanceDate: '',
+      contractFile: null,
+    });
+    setShowMosqueSelectModal(false);
+    setShowAddOutbuildingModal(true);
+  }
+
+  async function handleAddOutbuilding(e: React.FormEvent) {
+    e.preventDefault();
+    if (!selectedMosqueForAdd) return;
+    setAddOutbuildingLoading(true);
+    try {
+      const f = addOutbuildingForm;
+      const fd = new FormData();
+      fd.append('description', f.description);
+      fd.append('governorateId', f.governorateId);
+      fd.append('departmentId', f.departmentId);
+      fd.append('sheikhdomId', f.sheikhdomId);
+      fd.append('street', f.street || '');
+      fd.append('space', f.space);
+      fd.append('notes', f.notes || '');
+      fd.append('purpose', String(f.purpose));
+      if (f.customPurpose) fd.append('customPurpose', f.customPurpose);
+      if (f.legalStatus !== null) fd.append('legalStatus', String(f.legalStatus));
+      fd.append('hasElectricityMeter', String(f.hasElectricityMeter));
+      fd.append('hasWaterMeter', String(f.hasWaterMeter));
+      fd.append('status', String(f.status));
+      if (f.status) {
+        if (f.price) fd.append('price', f.price);
+        if (f.tenantName) fd.append('tenantName', f.tenantName);
+        if (f.tenantNationalId) fd.append('tenantNationalId', f.tenantNationalId);
+        if (f.startDate) fd.append('startDate', f.startDate);
+        if (f.endDate) fd.append('endDate', f.endDate);
+        if (f.acceptanceDate) fd.append('acceptanceDate', f.acceptanceDate);
+        if (f.contractFile) fd.append('contractFile', f.contractFile);
+      }
+      const res = await apiFetch(`/Outbuildings/${selectedMosqueForAdd.id}`, {
+        method: 'POST',
+        body: fd,
+      });
+      const data = await res.json();
+      if (data.status === 'success') {
+        toast('تم إضافة الملحق بنجاح');
+        setShowAddOutbuildingModal(false);
+        await fetchOutbuildings();
+      } else {
+        toast(data.message || 'حدث خطأ أثناء الإضافة', 'error');
+      }
+    } catch {
+      toast('فشل الاتصال بالسيرفر', 'error');
+    } finally {
+      setAddOutbuildingLoading(false);
+    }
+  }
+
   return (
     <div className="text-right h-full flex flex-col overflow-hidden">
       <div className="mb-3 p-3 bg-gray-50/60 rounded-lg shadow-sm shrink-0">
@@ -425,13 +533,23 @@ export default function OutbuildingsPage() {
             <h2 className="text-base font-bold mb-1">جميع الملحقات</h2>
             <p className="text-xs text-gray-600">عرض جميع الملحقات في النظام</p>
           </div>
-          <button
-            onClick={() => setShowFilters(!showFilters)}
-            className="flex items-center gap-2 px-3 py-1.5 border rounded hover:bg-white transition-colors text-sm"
-          >
-            <span>{showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}</span>
-            <span className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}>▾</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => { setMosqueSearchQuery(''); setShowMosqueSelectModal(true); }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-white text-sm transition-opacity hover:opacity-90"
+              style={{ backgroundColor: 'var(--primary)' }}
+            >
+              <span>+</span>
+              <span>إضافة ملحق</span>
+            </button>
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="flex items-center gap-2 px-3 py-1.5 border rounded hover:bg-white transition-colors text-sm"
+            >
+              <span>{showFilters ? 'إخفاء الفلاتر' : 'إظهار الفلاتر'}</span>
+              <span className={`transition-transform duration-200 ${showFilters ? 'rotate-180' : ''}`}>▾</span>
+            </button>
+          </div>
         </div>
 
         {showFilters && (
@@ -711,6 +829,55 @@ export default function OutbuildingsPage() {
           message={confirmState.message}
           onConfirm={() => { setConfirmState(null); confirmState.onConfirm(); }}
           onCancel={() => setConfirmState(null)}
+        />
+      )}
+
+      {showMosqueSelectModal && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-[9999]" onClick={() => setShowMosqueSelectModal(false)}>
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-5" onClick={e => e.stopPropagation()}>
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-base font-semibold">اختر المسجد</h3>
+                <button className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-colors" onClick={() => setShowMosqueSelectModal(false)}>✕</button>
+              </div>
+              <input
+                type="text"
+                value={mosqueSearchQuery}
+                onChange={e => setMosqueSearchQuery(e.target.value)}
+                placeholder="ابحث عن مسجد..."
+                className="w-full border rounded px-3 py-2 mb-3 text-sm"
+                autoFocus
+              />
+              <div className="max-h-72 overflow-y-auto border rounded divide-y">
+                {allMosques
+                  .filter(m => !mosqueSearchQuery || m.name.includes(mosqueSearchQuery))
+                  .map(mosque => (
+                    <button
+                      key={mosque.id}
+                      className="w-full text-right px-3 py-2.5 hover:bg-gray-50 transition-colors text-sm"
+                      onClick={() => openAddOutbuildingFlow(mosque)}
+                    >
+                      <div className="font-medium text-gray-800">{mosque.name}</div>
+                      <div className="text-xs text-gray-400 mt-0.5">{mosque.directorateName} — {mosque.administrationName}</div>
+                    </button>
+                  ))}
+                {allMosques.filter(m => !mosqueSearchQuery || m.name.includes(mosqueSearchQuery)).length === 0 && (
+                  <div className="px-3 py-4 text-center text-gray-400 text-sm">لا توجد نتائج</div>
+                )}
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {showAddOutbuildingModal && selectedMosqueForAdd && (
+        <AddOutbuildingModal
+          mosqueName={selectedMosqueForAdd.name}
+          form={addOutbuildingForm}
+          loading={addOutbuildingLoading}
+          onClose={() => setShowAddOutbuildingModal(false)}
+          onSubmit={handleAddOutbuilding}
+          onChange={setAddOutbuildingForm}
         />
       )}
     </div>

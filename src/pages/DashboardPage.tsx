@@ -59,14 +59,14 @@ function StatCard({
           <path d={iconPath} />
         </svg>
       </div>
-      <div className="flex-1 text-right min-w-0">
+      <div className="flex-1 min-w-0">
         <div
-          className="text-xl font-bold text-gray-800 leading-tight truncate"
+          className="text-xl font-bold text-gray-800 leading-tight truncate tabular-nums text-right"
           title={String(value)}
         >
           {value}
         </div>
-        <div className="text-xs text-gray-400 mt-0.5 whitespace-nowrap flex items-center justify-end gap-1">
+        <div className="text-xs text-gray-400 mt-0.5 whitespace-nowrap flex items-center justify-right gap-1">
           {label}
           {onClick && (
             <svg className="w-3 h-3 text-gray-300 group-hover:text-gray-400 transition-colors shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -264,11 +264,17 @@ export default function DashboardPage() {
       </div>
 
       {/* Stat Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 shrink-0">
+      <div className="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-3 shrink-0">
         {loading ? (
-          Array.from({ length: 5 }).map((_, i) => <SkeletonCard key={i} />)
+          Array.from({ length: 6 }).map((_, i) => <SkeletonCard key={i} />)
         ) : cards ? (
           <>
+            <StatCard
+              label="عقود تنتهي خلال 3 أشهر"
+              value={cards.expiringContractsCount}
+              accent="alert"
+              iconPath="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"
+            />
             <StatCard
               label="إجمالي الملحقات"
               value={cards.totalOutbuildings}

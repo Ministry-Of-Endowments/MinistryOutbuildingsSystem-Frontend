@@ -226,6 +226,7 @@ export interface OverviewCardsDto {
   unusedOutbuildingsCount: number;
   activeRentTotal: number;
   criticalLegalCasesCount: number;
+  expiringContractsCount: number;
 }
 
 export interface PurposeDistributionItemDto {
